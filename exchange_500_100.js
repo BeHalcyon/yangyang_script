@@ -28,11 +28,11 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
     return;
   }
   console.log("准备开始抢券！")
-  // 等57秒再抢
-  await wait(57000)
+  // 等56秒再抢
+  await wait(56000)
   for (let j = 0; j < randomCount; ++j)
     // 抢第1-5个号
-    for (let i = 0; i < 5 && i != 3; i++) {
+    for (let i = 0; i < 7 && i != 3; i++) {
       if (cookiesArr[i]) {
         cookie = cookiesArr[i];
         $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
