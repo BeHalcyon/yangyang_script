@@ -2,7 +2,7 @@
 2021.01.09 极速版25-8抢券 [exchange_25_8.js]
 cron:0 59 8,11,14,16,19 * * *
  */
-const $ = new Env('京东极速版25-8抢券');
+const $ = new Env('京东极速版25-8抢券(yangyang)');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
