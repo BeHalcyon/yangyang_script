@@ -1,6 +1,6 @@
 /*
 2021.01.09 抢500-100券 [exchange_500_100.js]
-cron:0 59 9,13,19,21 * * *
+cron:0 59 9,13,19,20 * * *
  */
 const $ = new Env('京东500-100抢券');
 const moment = require('moment');
