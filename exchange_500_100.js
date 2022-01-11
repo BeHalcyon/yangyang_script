@@ -1,8 +1,8 @@
 /*
 2021.01.09 抢500-100券 [exchange_500_100.js]
-cron:0 59 9-20/1 * * *
+cron:0 59 9,13,19,21 * * *
  */
-const $ = new Env('京dong500-100抢券(yangyang)');
+const $ = new Env('京东500-100抢券(yangyang)');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
@@ -29,10 +29,10 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   }
   console.log("准备开始抢券！")
   // 等56秒再抢
-  await wait(56000)
+  await wait(57000)
   for (let j = 0; j < randomCount; ++j)
     // 抢第1-5个号
-    for (let i = 0; i < 7 && i != 3; i++) {
+    for (let i = 0; i < 5 && i != 3; i++) {
       if (cookiesArr[i]) {
         cookie = cookiesArr[i];
         $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])

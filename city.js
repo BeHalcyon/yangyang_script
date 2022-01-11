@@ -8,7 +8,6 @@ const notify = $.isNode() ? require('./sendNotify') : '';
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 //自动抽奖 ，环境变量  JD_CITY_EXCHANGE
 let exchangeFlag = $.isNode() ? (process.env.JD_CITY_EXCHANGE === "true" ? true : false) : ($.getdata('jdJxdExchange') === "true" ? true : false)  //是否开启自动抽奖，建议活动快结束开启，默认关闭
-let helpPool = $.isNode() ? (process.env.JD_CITY_HELPPOOL === "false" ? false : true) : ($.getdata('JD_CITY_HELPPOOL') === "false" ? false : true) //是否全部助力助力池开关，默认开启
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '', message;
 let uuid, UA;
@@ -22,7 +21,7 @@ if ($.isNode()) {
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
-let inviteCodes = []
+
 !(async () => {
   if (!cookiesArr[0]) {
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
@@ -31,7 +30,7 @@ let inviteCodes = []
   if (exchangeFlag) {
     console.log(`脚本自动抽奖`)
   } else {
-    console.log(`脚本默认助力助力池，设置环境变量export JD_CITY_HELPPOOL="false"才会内部互助。上车 不会自动抽奖，建议活动快结束开启，默认关闭,如需自动抽奖请设置环境变量  JD_CITY_EXCHANGE 为true`);
+    console.log(`脚本不会自动抽奖，建议活动快结束开启，默认关闭,如需自动抽奖请设置环境变量  JD_CITY_EXCHANGE 为true`);
   }
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
@@ -57,12 +56,7 @@ let inviteCodes = []
       await $.wait(1000)
     }
   }
-  inviteCodes = await getAuthorShareCode('https://raw.githubusercontent.com/Aaron-lv/updateTeam/master/shareCodes/city.json')
-  if (!inviteCodes) {
-    $.http.get({url: 'https://purge.jsdelivr.net/gh/Aaron-lv/updateTeam@master/shareCodes/city.json'}).then((resp) => {}).catch((e) => console.log('刷新CDN异常', e));
-    await $.wait(1000)
-    inviteCodes = await getAuthorShareCode('https://cdn.jsdelivr.net/gh/Aaron-lv/updateTeam@master/shareCodes/city.json')
-  }
+
   for (let i = 0; i < cookiesArr.length; i++) {
     cookie = cookiesArr[i];
     $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
@@ -71,17 +65,11 @@ let inviteCodes = []
     uuid = UA.split(';')[4]
     await shareCodesFormat()
     let shareCodes;
-    if (helpPool) {
-      shareCodes = [...new Set([...inviteCodes, ...$.readShareCode])]
-    } else {
-      if (i === 0) {
-        shareCodes = [...new Set([...inviteCodes, ...$.readShareCode])]
-      } else {
-        shareCodes = [...$.newShareCodes]
-      }
-    }
+
+    shareCodes = [...$.newShareCodes]
+    
     for (let j = 0; j < shareCodes.length; j++) {
-      console.log(helpPool ? `\n${$.UserName} 开始助力 助力池 【${shareCodes[j]}】` : i === 0 ? `\nCK1 ${$.UserName} 开始助力 助力池 【${shareCodes[j]}】` : `\n${$.UserName} 开始助力 【${shareCodes[j]}】`)
+      console.log(`\n${$.UserName} 开始助力 【${shareCodes[j]}】`)
       await $.wait(1000)
       let res = await getInfo(shareCodes[j])
       if (res && res['data'] && res['data']['bizCode'] === 0) {
@@ -376,9 +364,9 @@ function shareCodesFormat() {
     const readShareCodeRes = await readShareCode();
     $.readShareCode = (readShareCodeRes && readShareCodeRes.data) || []
     if (readShareCodeRes && readShareCodeRes.code === 200) {
-      $.newShareCodes = [...new Set([...$.shareCodes, ...inviteCodes, ...$.readShareCode])];
+      $.newShareCodes = [...new Set([...$.shareCodes, ...$.readShareCode])];
     } else {
-      $.newShareCodes = [...new Set([...$.shareCodes, ...inviteCodes])];
+      $.newShareCodes = [...$.shareCodes];
     }
     console.log(`\n第${$.index}个京东账号将要助力的好友${JSON.stringify($.newShareCodes)}`)
     resolve();
