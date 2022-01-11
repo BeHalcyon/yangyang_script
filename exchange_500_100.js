@@ -2,7 +2,7 @@
 2021.01.09 抢500-100券 [exchange_500_100.js]
 cron:0 59 9,13,19,21 * * *
  */
-const $ = new Env('京东500-100抢券(yangyang)');
+const $ = new Env('京东500-100抢券');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;

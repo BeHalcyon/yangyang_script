@@ -2,7 +2,7 @@
 2021.01.09 京东试用 [try.js]
 cron:20 1-22/5 * * *
 */
-const $ = new Env('京东试用(yangyang)')
+const $ = new Env('京东试用')
 const URL = 'https://api.m.jd.com/client.action'
 let trialActivityIdList = []
 let trialActivityTitleList = []
