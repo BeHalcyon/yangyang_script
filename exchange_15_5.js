@@ -2,6 +2,17 @@
 2021.01.09 极速版15-5抢券 [exchange_15_5.js]
 cron:0 59 6,9,14,17,20 * * *
  */
+
+let ck_str = process.env.YANGYANG_EXCHANGE_CKS ? process.env.YANGYANG_EXCHANGE_CKS : "0@1@2@3"; // 需要抢的号
+
+let ck_str_items=ck_str.split("@");  //分割成字符串数组
+let ck_int_items=[];//保存转换后的整型字符串
+   
+ck_str_items.forEach(item => {  
+  ck_int_items.push(+item);  
+});
+
+
 const $ = new Env('极速版15-5抢券');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
@@ -31,12 +42,12 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   // 等57秒再抢
   await wait(57000)
   for (let j = 0; j < randomCount; ++j)
-    // 抢第1-5个号
-    for (let i = 0; i < 5 && i != 3; i++) {
-      if (cookiesArr[i]) {
-        cookie = cookiesArr[i];
+    for (let i = 0; i < ck_int_items.length; i++) {
+      cur_index = ck_int_items[i];
+      if (cookiesArr[cur_index]) {
+        cookie = cookiesArr[cur_index];
         $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
-        $.index = i + 1;
+        $.index = cur_index + 1;
         console.log(`*********京东账号${$.index} ${$.UserName}*********`)
         $.isLogin = true;
         $.nickName = '';
