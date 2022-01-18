@@ -16,7 +16,7 @@ ck_str_items.forEach(item => {
 });
 
 
-const $ = new Env('京东99-88抢券');
+const $ = new Env('京东伊利199-198抢券');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
