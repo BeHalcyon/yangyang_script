@@ -1,5 +1,5 @@
 /*
-2021.01.09 极速版15-5抢券 [exchange_15_5.js]
+2021.01.09 极速版100-25抢券 [exchange_100_25.js]
 cron:0 59 6,9,14,17,20 * * *
  */
 
@@ -13,7 +13,7 @@ ck_str_items.forEach(item => {
 });
 
 
-const $ = new Env('极速版15-5抢券');
+const $ = new Env('极速版100-25抢券');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
