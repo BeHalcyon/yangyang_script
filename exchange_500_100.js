@@ -1,6 +1,6 @@
 /*
 2021.01.09 抢500-100券 [exchange_500_100.js]
-cron:0 59 9,13,19,20,21 * * *
+cron:0 59 19,20,21,22 * * *
  */
 
 let ck_str = process.env.YANGYANG_EXCHANGE_CKS ? process.env.YANGYANG_EXCHANGE_CKS : "0@1@2@3"; // 需要抢的号
@@ -101,7 +101,7 @@ function exchange() {
 function taskUrl(function_id, body = {}) {
   return {
     // url: `${JD_API_HOST}${function_id}?timestamp=${new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000}`,
-    url: `https://api.m.jd.com/client.action?client=wh5&clientVersion=1.0.0&functionId=lite_newBabelAwardCollection`,
+    url: `https://api.m.jd.com/client.action?client=wh5&clientVersion=1.0.0&functionId=newBabelAwardCollection`,
     headers: {
       "Accept": "*/*",
       "Accept-Encoding": "gzip, deflate, br",
@@ -113,7 +113,7 @@ function taskUrl(function_id, body = {}) {
       "Cookie": cookie,
       "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
     },
-    body: "body=%7B%22activityId%22%3A%22UcLBtK9kh8rA8M2h6pBfhd7rsd7%22%2C%22scene%22%3A%221%22%2C%22args%22%3A%22key%3DDD98BDDD838A0F60578BEC06CF63F1E027D176A315E60F18E48104FE15076D58FFA18701879AA339876F5FB4B7F513F9_bingo%2CroleId%3D9E2C6D36242771388D05258F238C6CD4_bingo%2CstrengthenKey%3D974B4B68F253568B06478C6C5BEE44043BB0987594D845A547D59EA2AB0FF1D53B5C3D37F7E50F72DF8E99446D75439E_bingo%22%7D"
+    body: "body=%7B%22activityId%22%3A%22UcLBtK9kh8rA8M2h6pBfhd7rsd7%22%2C%22scene%22%3A%221%22%2C%22args%22%3A%22key%3DD651DC890AA761CC39C581557571EF35720127D95D4422B80E57E16A02124747AC25142AF604076FEF3739C893178A69_bingo%2CroleId%3DA541DFFC4BC596AF39C15616FC229CE4_bingo%2CstrengthenKey%3D47158F934197BED45CDE415A8967011AD3038C0FD98135A88CF44AEF7D4F3CD07F8AEB9C5542E90C9AE56A8E47CD330F_bingo%22%7D"
   }
 }
 
