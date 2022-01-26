@@ -8,9 +8,6 @@ let ck_str = process.env.YANGYANG_EXCHANGE_CKS ? process.env.YANGYANG_EXCHANGE_C
 let ck_str_items=ck_str.split("@");  //分割成字符串数组
 let ck_int_items=[];//保存转换后的整型字符串
    
-ck_str_items.forEach(item => {  
-  ck_int_items.push(+item);  
-});
 
 const $ = new Env('极速版25-8抢券');
 const moment = require('moment');
@@ -18,7 +15,22 @@ const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let jdNotify = true;//是否关闭通知，false打开通知推送，true关闭通知推送
-const randomCount = $.isNode() ? 20 : 5;
+let randomCount = $.isNode() ? 10 : 5;
+
+const h = (new Date()).getHours()
+const fuli_time = h >= 14 && h <= 17
+// 全员都抢
+if (!fuli_time) {
+    ck_str_items.forEach(item => {  
+        ck_int_items.push(+item);  
+      });
+}
+else {
+    for (let i=0;i<cookiesArr.length;i++) {
+        ck_int_items.push(i);
+    }
+    randomCount = 4;
+}
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '', message;
 if ($.isNode()) {
