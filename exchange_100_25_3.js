@@ -66,9 +66,7 @@ for (let i = 0; i < ck_int_items_mask.length; i ++) {
   }
 }
 
-if (fuli_time) {
-  randomCount = 4;
-}
+
 cookiesArr = buf_cookiesArr;
 // 循环次数
 let randomCount = process.env.YANGYANG_EXCHANGE_LOOP_TIMES ? Math.ceil(parseInt(process.env.YANGYANG_EXCHANGE_LOOP_TIMES) / cookiesArr.length) : 10;
