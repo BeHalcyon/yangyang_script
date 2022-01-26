@@ -30,9 +30,9 @@ if ($.isNode()) {
 }
 
 
-let start_hour = process.env.YANGYANG_EXCHANGE_FULI_START_HOUR ? parseInt(YANGYANG_EXCHANGE_FULI_START_HOUR) : 13;
-let end_hour = process.env.YANGYANG_EXCHANGE_FULI_END_HOUR ? parseInt(YANGYANG_EXCHANGE_FULI_END_HOUR) : 17;
-let waiting_time =  process.env.YANGYANG_EXCHANGE_WAITING_TIME ? parseInt(YANGYANG_EXCHANGE_WAITING_TIME) : 56000;
+let start_hour = process.env.YANGYANG_EXCHANGE_FULI_START_HOUR ? parseInt(process.env.YANGYANG_EXCHANGE_FULI_START_HOUR) : 13;
+let end_hour = process.env.YANGYANG_EXCHANGE_FULI_END_HOUR ? parseInt(process.env.YANGYANG_EXCHANGE_FULI_END_HOUR) : 17;
+let waiting_time =  process.env.YANGYANG_EXCHANGE_WAITING_TIME ? parseInt(process.env.YANGYANG_EXCHANGE_WAITING_TIME) : 56000;
 
 const h = (new Date()).getHours()
 const fuli_time = h >= start_hour && h <= end_hour
