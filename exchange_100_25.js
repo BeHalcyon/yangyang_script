@@ -29,33 +29,47 @@ if ($.isNode()) {
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
 
+
+let start_hour = process.env.YANGYANG_EXCHANGE_FULI_START_HOUR ? parseInt(YANGYANG_EXCHANGE_FULI_START_HOUR) : 13;
+let end_hour = process.env.YANGYANG_EXCHANGE_FULI_END_HOUR ? parseInt(YANGYANG_EXCHANGE_FULI_END_HOUR) : 17;
+let waiting_time =  process.env.YANGYANG_EXCHANGE_WAITING_TIME ? parseInt(YANGYANG_EXCHANGE_WAITING_TIME) : 56000;
+
 const h = (new Date()).getHours()
-const fuli_time = h >= 14 && h <= 17
-// 全员都抢
-if (!fuli_time) {
-    ck_str_items.forEach(item => {  
-        ck_int_items.push(+item);  
-      });
+const fuli_time = h >= start_hour && h <= end_hour
+
+
+ck_str_items.forEach(item => {  
+  ck_int_items.push(+item);  
+});
+let ck_int_items_mask = new Array(cookiesArr.length);
+for (let i = 0; i < ck_int_items_mask.length; i ++) {
+  ck_int_items_mask[i] = false;
 }
-else {
-    // 删除已经主要抢的号
-    let buf_ck_int_items=[];
-    ck_str_items.forEach(item => {  
-      buf_ck_int_items.push(+item);  
-    });
-    for (let i=0;i<cookiesArr.length;i++) {
-      let flag = true;
-      for (let j=0;j<buf_ck_int_items.length;j++) {
-        if (buf_ck_int_items[j] == i) {
-          flag = false;
-          break;
-        }
-      }
-      if (flag)
-        ck_int_items.push(i);
+
+for (let i = 0; i < ck_int_items.length; i ++) {
+  ck_int_items_mask[ck_int_items[i]] = true;
+}
+let buf_cookiesArr = [];
+
+for (let i = 0; i < ck_int_items_mask.length; i ++) {
+  // 内部成员抢券
+  if (!fuli_time) {
+    if (ck_int_items_mask[i]) {
+      buf_cookiesArr.push(cookiesArr[i]);
     }
-    randomCount = 4;
+  }
+  // 外部成员
+  else {
+    if (!ck_int_items_mask[i]) {
+      buf_cookiesArr.push(cookiesArr[i]);
+    }
+  }
 }
+
+if (fuli_time) {
+  randomCount = 4;
+}
+cookiesArr = buf_cookiesArr;
 
 
 const JD_API_HOST = 'https://api.m.jd.com/client.action?';
@@ -67,7 +81,7 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   }
   console.log("准备开始抢券！")
   // 等57秒再抢
-  await wait(57000)
+  await wait(waiting_time)
   for (let j = 0; j < randomCount; ++j)
     for (let i = 0; i < ck_int_items.length; i++) {
       cur_index = ck_int_items[i];
