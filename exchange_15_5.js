@@ -18,20 +18,7 @@ const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let jdNotify = true;//是否关闭通知，false打开通知推送，true关闭通知推送
 let randomCount = $.isNode() ? 10 : 5;
 
-const h = (new Date()).getHours()
-const fuli_time = h >= 14 && h <= 17
-// 全员都抢
-if (!fuli_time) {
-    ck_str_items.forEach(item => {  
-        ck_int_items.push(+item);  
-      });
-}
-else {
-    for (let i=0;i<cookiesArr.length;i++) {
-        ck_int_items.push(i);
-    }
-    randomCount = 4;
-}
+
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '', message;
 if ($.isNode()) {
@@ -43,6 +30,35 @@ if ($.isNode()) {
 } else {
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
+
+const h = (new Date()).getHours()
+const fuli_time = h >= 14 && h <= 17
+// 全员都抢
+if (!fuli_time) {
+    ck_str_items.forEach(item => {  
+        ck_int_items.push(+item);  
+      });
+}
+else {
+    // 删除已经主要抢的号
+    let buf_ck_int_items=[];
+    ck_str_items.forEach(item => {  
+      buf_ck_int_items.push(+item);  
+    });
+    for (let i=0;i<cookiesArr.length;i++) {
+      let flag = true;
+      for (let j=0;j<buf_ck_int_items.length;j++) {
+        if (buf_ck_int_items[j] == i) {
+          flag = false;
+          break;
+        }
+      }
+      if (flag)
+        ck_int_items.push(i);
+    }
+    randomCount = 4;
+}
+
 const JD_API_HOST = 'https://api.m.jd.com/client.action?';
 let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 !(async () => {
