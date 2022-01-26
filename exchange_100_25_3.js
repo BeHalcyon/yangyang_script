@@ -83,18 +83,17 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   // 等57秒再抢
   await wait(waiting_time)
   for (let j = 0; j < randomCount; ++j)
-    for (let i = 0; i < ck_int_items.length; i++) {
-      cur_index = ck_int_items[i];
-      if (cookiesArr[cur_index]) {
-        cookie = cookiesArr[cur_index];
+    for (let i = 0; i < cookiesArr.length; i++) {
+        if (cookiesArr[i]) {
+        cookie = cookiesArr[i];
         $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
-        $.index = cur_index + 1;
+        $.index = i + 1;
         console.log(`*********京东账号${$.index} ${$.UserName}*********`)
         $.isLogin = true;
         $.nickName = '';
         message = '';
         await jdCar();
-      }
+        }
     }
 })()
   .catch((e) => {
