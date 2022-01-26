@@ -1,15 +1,15 @@
 /*
-2021.01.09 极速版100-25抢券 [exchange_100_25.js]
-cron:0 59 8,11,14,16,20 * * *
+2021.01.09 极速版100-25抢券（第二批） [exchange_100_25_2.js]
+cron:0 59 8,11,14,16,19 * * *
  */
 
-let ck_str = process.env.YANGYANG_EXCHANGE_CKS ? process.env.YANGYANG_EXCHANGE_CKS : "0@1@2@3"; // 需要抢的号
+let ck_str = process.env.YANGYANG_EXCHANGE_CKS_BATCH_2 ? process.env.YANGYANG_EXCHANGE_CKS_BATCH_2 : "0@1@2@3"; // 需要抢的号
 
 let ck_str_items=ck_str.split("@");  //分割成字符串数组
 let ck_int_items=[];//保存转换后的整型字符串
 
 
-const $ = new Env('极速版100-25抢券');
+const $ = new Env('极速版100-25抢券（第二批）');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
