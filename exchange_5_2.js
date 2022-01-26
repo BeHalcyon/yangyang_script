@@ -17,7 +17,6 @@ const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let jdNotify = true;//是否关闭通知，false打开通知推送，true关闭通知推送
-let randomCount = $.isNode() ? 10 : 5;
 
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '', message;
@@ -67,11 +66,11 @@ for (let i = 0; i < ck_int_items_mask.length; i ++) {
   }
 }
 
-if (fuli_time) {
-  randomCount = 4;
-}
 cookiesArr = buf_cookiesArr;
-
+// 循环次数
+let randomCount = process.env.YANGYANG_EXCHANGE_LOOP_TIMES ? Math.ceil(parseInt(process.env.YANGYANG_EXCHANGE_LOOP_TIMES) / cookiesArr.length) : 10;
+console.log("循环次数为", randomCount);
+console.log("总循环次数为", randomCount*cookiesArr.length);
 
 const JD_API_HOST = 'https://api.m.jd.com/client.action?';
 let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
