@@ -1,5 +1,5 @@
 /*
-2021.01.09 极速版100-25抢券（第4批） [exchange_100_25_4.js]
+2021.01.09 极速版100-25抢券（第四批） [exchange_100_25_4.js]
 cron:0 59 8,11,14,16,19 * * *
  */
 
@@ -9,7 +9,7 @@ let ck_str_items=ck_str.split("@");  //分割成字符串数组
 let ck_int_items=[];//保存转换后的整型字符串
 
 
-const $ = new Env('极速版100-25抢券（第4批）');
+const $ = new Env('极速版100-25抢券（第四批）');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;

@@ -1,6 +1,6 @@
 /*
 2021.01.09 极速版19-6抢券 [exchange_19_6.js]
-cron:0 59 8,11,14,16,19 * * *
+cron:0 59 13 * * *
  */
 
 let ck_str = process.env.YANGYANG_EXCHANGE_CKS ? process.env.YANGYANG_EXCHANGE_CKS : "0@1@2@3"; // 需要抢的号

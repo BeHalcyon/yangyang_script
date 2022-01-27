@@ -17,5 +17,3 @@ body = '{"activityId":"UcLBtK9kh8rA8M2h6pBfhd7rsd7","scene":"1","args":"key=D651
 
 print(url(header, body))
 
-
-
