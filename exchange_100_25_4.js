@@ -81,6 +81,8 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
     return;
   }
   console.log("准备开始抢券！")
+  console.log("等待时间为", waiting_time / 1000, "秒");
+  console.log("当前时间为",  (new Date()).getSeconds(), "秒");
   // 等57秒再抢
   await wait(waiting_time)
   for (let j = 0; j < randomCount; ++j)
