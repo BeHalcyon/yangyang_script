@@ -1,15 +1,15 @@
 /*
-2021.01.09 极速版19-6抢券 [exchange_19_6.js]
-cron:0 59 13,19 * * *
+2021.01.09 极速版100-25抢券（第五批） [exchange_100_25_5.js]
+cron:0 59 8,11,14,16,19 * * *
  */
 
-let ck_str = process.env.YANGYANG_EXCHANGE_CKS ? process.env.YANGYANG_EXCHANGE_CKS : "0@1@2@3"; // 需要抢的号
+let ck_str = process.env.YANGYANG_EXCHANGE_CKS_BATCH_5 ? process.env.YANGYANG_EXCHANGE_CKS_BATCH_5 : "0@1@2@3"; // 需要抢的号
 
 let ck_str_items=ck_str.split("@");  //分割成字符串数组
 let ck_int_items=[];//保存转换后的整型字符串
 
 
-const $ = new Env('极速版19-6抢券');
+const $ = new Env('极速版100-25抢券（第五批）');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
@@ -66,6 +66,7 @@ for (let i = 0; i < ck_int_items_mask.length; i ++) {
   }
 }
 
+
 cookiesArr = buf_cookiesArr;
 // 循环次数
 let randomCount = process.env.YANGYANG_EXCHANGE_LOOP_TIMES ? Math.ceil(parseInt(process.env.YANGYANG_EXCHANGE_LOOP_TIMES) / cookiesArr.length) : 10;
@@ -80,7 +81,7 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
     return;
   }
   console.log("准备开始抢券！")
-  // 等56秒再抢
+  // 等57秒再抢
   await wait(waiting_time)
   for (let j = 0; j < randomCount; ++j)
     for (let i = 0; i < cookiesArr.length; i++) {
@@ -141,7 +142,7 @@ function exchange() {
 function taskUrl(function_id, body = {}) {
   return {
     // url: `${JD_API_HOST}${function_id}?timestamp=${new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000}`,
-    url: `https://api.m.jd.com/client.action?functionId=newBabelAwardCollection`,
+    url: `https://api.m.jd.com/client.action?client=wh5&clientVersion=1.0.0&functionId=lite_newBabelAwardCollection`,
     headers: {
       "Accept": "*/*",
       "Accept-Encoding": "gzip, deflate, br",
@@ -153,7 +154,7 @@ function taskUrl(function_id, body = {}) {
       "Cookie": cookie,
       "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
     },
-    body: "body=%7B%22activityId%22%3A%223H885vA4sQj6ctYzzPVix4iiYN2P%22%2C%22scene%22%3A%221%22%2C%22args%22%3A%22key%3D428A3D10FE583B0A23E03E3375FFB222B2FC0B5C94087F358C79A5BF193071422DBB4BF729A4B3062B7701060D824B99_bingo%2CroleId%3D1A018FFACAA2289D71928B1EA9FBE9BF_bingo%2CstrengthenKey%3D624488A620677326F37147F4B3F4B39D7B889ABE9CA22EB9172E0D30F01178B3E80DBFD4B26B0F87254A65FC5A79BD47_bingo%22%7D&client=wh5&clientVersion=1.0.0"
+    body: "body=%7B%22activityId%22%3A%223H885vA4sQj6ctYzzPVix4iiYN2P%22%2C%22scene%22%3A%221%22%2C%22args%22%3A%22key%3D13BAFD7A48A5CDBB5BF4964F73EA85EA9B440DD4E122575738F1F8CA68652FBAFEF1CA72E4610922DC8A620E884F0934_bingo%2CroleId%3D71833AAACF739A21CD2B45B51EC01F21_bingo%2CstrengthenKey%3D974B4B68F253568B06478C6C5BEE44043BB0987594D845A547D59EA2AB0FF1D53151596EBF12E040EE680826C8C131ED_bingo%22%7D"
   }
 }
 
