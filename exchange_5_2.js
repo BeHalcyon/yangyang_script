@@ -141,7 +141,7 @@ function exchange() {
 function taskUrl(function_id, body = {}) {
   return {
     // url: `${JD_API_HOST}${function_id}?timestamp=${new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000}`,
-    url: `https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection`,
+    url: `https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0`,
     headers: {
       "Accept": "*/*",
       "Accept-Encoding": "gzip, deflate, br",
@@ -154,7 +154,7 @@ function taskUrl(function_id, body = {}) {
       "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
     },
     // body= "body={%22activityId%22:%223H885vA4sQj6ctYzzPVix4iiYN2P%22,%22scene%22:%221%22,%22args%22:%22key=A8B9E46AA230D12669B22F6E084C303E06132BB42A39FFB7B285EC61204648F3FE5373963CA264B6CC02566AB901DE98_babel,roleId=BE49B763F657D252312B5D9E866C34EF_babel,strengthenKey=E9632480FF1A5F1B4D66C5999347325B3F3103AEC45237750EB4B4CE785A9F35CAB9C308E7AFE14C2AAD590FE2A2D709_babel%22}&screen=750*1334&client=wh5&clientVersion=1.0.0"
-    body: "body=%7B%22activityId%22:%223H885vA4sQj6ctYzzPVix4iiYN2P%22,%22scene%22:%221%22,%22args%22:%22key=5430F3FAC2C88054E3DBF4F8397F84D4640EE699CEB8027826F57C15E1099D241D7DBA5222CD67DED40BE302DCAC68FB_bingo,roleId=BD76F9321F7AE9FF3AE2EC0366317F9D_bingo,strengthenKey=10512DF4C3CA58276FBA323D56C1FDA0D96E4E9F80D4E5620B7629495B26C224D6419538AA8A1F9A5EEC81811909E396_bingo%22%7D&screen=750*1334&client=wh5&clientVersion=1.0.0"
+    body: "body=%7B%22activityId%22%3A%223H885vA4sQj6ctYzzPVix4iiYN2P%22%2C%22scene%22%3A%221%22%2C%22args%22%3A%22key%3DC1DEFD3C0396EDFC8215ACBF751C4620F0395465605CF9442326408CFB8A4F9825E83CD6C2B86F8929CB2F1095FB610F_bingo%2CroleId%3D23E2CB5340B5C6BEDF23627C434572F9_bingo%2CstrengthenKey%3D9591611F8E8A54D0D9B707D461570A2BDF02A83319BC85810E199C8EF5E5DEC33AEB6FB0F1F911E810EE840B239EB705_bingo%22%7D"
   }
 }
 

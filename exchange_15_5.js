@@ -141,7 +141,7 @@ function exchange() {
 function taskUrl(function_id, body = {}) {
   return {
     // url: `${JD_API_HOST}${function_id}?timestamp=${new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000}`,
-    url: `https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection`,
+    url: `https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0`,
     headers: {
       "Accept": "*/*",
       "Accept-Encoding": "gzip, deflate, br",
@@ -153,7 +153,7 @@ function taskUrl(function_id, body = {}) {
       "Cookie": cookie,
       "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
     },
-    body: "body=%7B%22activityId%22:%223H885vA4sQj6ctYzzPVix4iiYN2P%22,%22scene%22:%221%22,%22args%22:%22key=8C9530756467644A87C40DFAFFFC41C732AC04600F5EDD2124C791CCC30936092AF0DA561588ABE30B7326292DD2FD1C_bingo,roleId=B4D047F5AAEA72AFF78CE7F56323599F_bingo,strengthenKey=10512DF4C3CA58276FBA323D56C1FDA0D96E4E9F80D4E5620B7629495B26C224A448EECB329BBF134A3BF674A7D6992E_bingo%22%7D&screen=750*1334&client=wh5&clientVersion=1.0.0"
+    body: "body=%7B%22activityId%22%3A%223H885vA4sQj6ctYzzPVix4iiYN2P%22%2C%22scene%22%3A%221%22%2C%22args%22%3A%22key%3D31CD88AE3992AFDBE729F4437067107B9B3F625470E56A2CAB857113A623EE891A57CA578240012281B37439A2B9E805_bingo%2CroleId%3DA0199859AAB898F2CB26E5F8DC20588A_bingo%2CstrengthenKey%3D624488A620677326F37147F4B3F4B39D7B889ABE9CA22EB9172E0D30F01178B38C9BAB2EA4304700C98C4E334BE0F3A4_bingo%22%7D"
   }
 }
 
