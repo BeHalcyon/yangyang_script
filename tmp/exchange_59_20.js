@@ -1,27 +1,23 @@
 /*
-2021.01.09 京东59-20抢券测试 [exchange_59_20.js]
-cron:0 59 9,13,21 * * *
+2021.01.09 极速版59-20抢券 [exchange_59_20.js]
+cron:0 59 6,9,14,17,20 * * *
  */
 
-let ck_str = process.env.YANGYANG_EXCHANGE_CKS ? process.env.YANGYANG_EXCHANGE_CKS : "0@1@2@3"; // 需要抢的号
 
-ck_str = "10@11@12@13@14"
+let ck_str = process.env.YANGYANG_EXCHANGE_CKS ? process.env.YANGYANG_EXCHANGE_CKS : "0@1@2@3"; // 需要抢的号
 
 let ck_str_items=ck_str.split("@");  //分割成字符串数组
 let ck_int_items=[];//保存转换后的整型字符串
    
-ck_str_items.forEach(item => {  
-  ck_int_items.push(+item);  
-});
 
 
-const $ = new Env('京东59-20抢券测试');
+const $ = new Env('59-20抢券');
 const moment = require('moment');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let jdNotify = true;//是否关闭通知，false打开通知推送，true关闭通知推送
-const randomCount = $.isNode() ? 20 : 5;
+
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '', message;
 if ($.isNode()) {
@@ -33,6 +29,49 @@ if ($.isNode()) {
 } else {
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
+
+let start_hour = process.env.YANGYANG_EXCHANGE_FULI_START_HOUR ? parseInt(process.env.YANGYANG_EXCHANGE_FULI_START_HOUR) : 13;
+let end_hour = process.env.YANGYANG_EXCHANGE_FULI_END_HOUR ? parseInt(process.env.YANGYANG_EXCHANGE_FULI_END_HOUR) : 17;
+let waiting_time =  process.env.YANGYANG_EXCHANGE_WAITING_TIME ? parseInt(process.env.YANGYANG_EXCHANGE_WAITING_TIME) : 56000;
+
+const h = (new Date()).getHours()
+const fuli_time = h >= start_hour && h <= end_hour
+
+
+ck_str_items.forEach(item => {  
+  ck_int_items.push(+item);  
+});
+let ck_int_items_mask = new Array(cookiesArr.length);
+for (let i = 0; i < ck_int_items_mask.length; i ++) {
+  ck_int_items_mask[i] = false;
+}
+
+for (let i = 0; i < ck_int_items.length; i ++) {
+  ck_int_items_mask[ck_int_items[i]] = true;
+}
+let buf_cookiesArr = [];
+
+for (let i = 0; i < ck_int_items_mask.length; i ++) {
+  // 内部成员抢券
+  if (!fuli_time) {
+    if (ck_int_items_mask[i]) {
+      buf_cookiesArr.push(cookiesArr[i]);
+    }
+  }
+  // 外部成员
+  else {
+    if (!ck_int_items_mask[i]) {
+      buf_cookiesArr.push(cookiesArr[i]);
+    }
+  }
+}
+
+cookiesArr = buf_cookiesArr;
+// 循环次数
+let randomCount = process.env.YANGYANG_EXCHANGE_LOOP_TIMES ? Math.ceil(parseInt(process.env.YANGYANG_EXCHANGE_LOOP_TIMES) / cookiesArr.length) : 10;
+console.log("循环次数为", randomCount);
+console.log("总循环次数为", randomCount*cookiesArr.length);
+
 const JD_API_HOST = 'https://api.m.jd.com/client.action?';
 let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 !(async () => {
@@ -42,14 +81,13 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   }
   console.log("准备开始抢券！")
   // 等57秒再抢
-  await wait(57000)
+  await wait(waiting_time)
   for (let j = 0; j < randomCount; ++j)
-    for (let i = 0; i < ck_int_items.length; i++) {
-      cur_index = ck_int_items[i];
-      if (cookiesArr[cur_index]) {
-        cookie = cookiesArr[cur_index];
+    for (let i = 0; i < cookiesArr.length; i++) {
+      if (cookiesArr[i]) {
+        cookie = cookiesArr[i];
         $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
-        $.index = cur_index + 1;
+        $.index = i + 1;
         console.log(`*********京东账号${$.index} ${$.UserName}*********`)
         $.isLogin = true;
         $.nickName = '';
@@ -103,7 +141,7 @@ function exchange() {
 function taskUrl(function_id, body = {}) {
   return {
     // url: `${JD_API_HOST}${function_id}?timestamp=${new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000}`,
-    url: `https://api.m.jd.com/client.action?functionId=receiveNecklaceCoupon&clientVersion=9.5.2&client=android&uuid=unknown&st=1621365309780&sign=614a046a6d266e6d06113e90edb1d9bf&sv=111`,
+    url: `https://api.m.jd.com/client.action?functionId=receiveNecklaceCoupon`,
     headers: {
       "Accept": "*/*",
       "Accept-Encoding": "gzip, deflate, br",
@@ -115,7 +153,8 @@ function taskUrl(function_id, body = {}) {
       "Cookie": cookie,
       "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
     },
-    body: "body=%7B%22extend%22%3A%22CE04067719A2789F05A5399B36E879696C2BD7A8CD65FF63254F05FBC29ECC48D648F5B0E7329A8BEA05F30DC14C741A1318E35C21BE7DC1FCC8AD59A729E468D4E097496F48E437B8389AAADB10251EBFD2C43396DB49BF931E3A9A7B739FA11D369DB32BFB27C75265D38EF4FDDADA787266042BE7A4C5FF4792DA5F414D7CEF1EA4A13C97AEA9472F414DF80AC24483F31A4CD518B6822B03F240082B915869680133904D02D9B0A08BA81D506A129EAA611DDFBA5DA125776C38B15D74EBEDADDF37CDCC6B50ECD05CDBDD50292BEA84013CEE8F827FC019C6EA5E37EDD4%22%2C%22rcType%22%3A%224%22%2C%22source%22%3A%22couponCenter_app%22%7D"
+    // body= "body={%22activityId%22:%223H885vA4sQj6ctYzzPVix4iiYN2P%22,%22scene%22:%221%22,%22args%22:%22key=A8B9E46AA230D12669B22F6E084C303E06132BB42A39FFB7B285EC61204648F3FE5373963CA264B6CC02566AB901DE98_babel,roleId=BE49B763F657D252312B5D9E866C34EF_babel,strengthenKey=E9632480FF1A5F1B4D66C5999347325B3F3103AEC45237750EB4B4CE785A9F35CAB9C308E7AFE14C2AAD590FE2A2D709_babel%22}&screen=750*1334&client=wh5&clientVersion=1.0.0"
+    body: "body=%7B%22shshshfpb%22%3A%22JD0111d47dcT9hP9WRvk164429978244003SLYoasrQ8hZkkBXNZqTojLP6pXPA5bfYXhS0q92ubiIOHNFyAkX9PWLbmgyTDBq2tk0r3GcKvQk6mVgihhLfRhMZnHeuBbWMoZE17r0t50E1nc1qmq~k%5C/JWwU6dNQpwxW8QYlciL9%2BBd9mPsllwQMWu7OAPj6YRch0zv4ksAz3w%2BnBoZYnuJJwDE18tolOm8rqgSf7%5C/uZA%3D%3D%22%2C%22globalLng%22%3A%2262a08f6788983aab59e41c8ea75ebf54f90f3c961d906c3c5dc8943e41731fe0%22%2C%22globalLat%22%3A%2244e380f87201ef296678e742783d789dcabf23802bfb39147dc9096b0e418cbe%22%2C%22couponSource%22%3A%22manual%22%2C%22channel%22%3A%22%E9%A2%86%E5%88%B8%E4%B8%AD%E5%BF%83%22%2C%22monitorSource%22%3A%22ccresource_ios_index_config%22%2C%22source%22%3A%22couponCenter_app%22%2C%22childActivityUrl%22%3A%22openapp.jdmobile%253a%252f%252fvirtual%253fparams%253d%257b%255c%2522category%255c%2522%253a%255c%2522jump%255c%2522%252c%255c%2522des%255c%2522%253a%255c%2522couponCenter%255c%2522%257d%22%2C%22pageClickKey%22%3A%22CouponCenter%22%2C%22rcType%22%3A%224%22%2C%22batchId%22%3A%22838474366%22%2C%22lat%22%3A%2244e380f87201ef296678e742783d789dcabf23802bfb39147dc9096b0e418cbe%22%2C%22extend%22%3A%2288DB80104521161CDFFBD5A8057E28D3EF2A36CD609FB9F93630C431EC3F2FF7A213BE06482C2B115ACD30536499B3CB0A01A2E3517769E5B0D9D7A5FEB8B889BD33FABABAAE44534079014FFCB53C97E4B83FDFBF4D390B5981BCB1425ED380A6899D989FA0A8BD599EFAA992F18E08F0EDBD1C98F3FDD9C3D8868755C40A29FD24CD82692E698A804D1CF84FBF64469DAAE1D4A18BCBC81A719FF6FA20A69AD2CC6BA9BC1D7D9260AFCB101491B9AC7E5DA6E5A8541A03F267F95AE8C4BFA5BD35C5C49C4E08541A7F779BE86F0D28779B79689C1419EBBEE37AD1040A66A788C7B98A813A7C555933FB648795E653D6D8A88FDBE69BCC672084ECFD8A23B955E1BE1666565328CF378A8B06529D3197B5E899EF72D6F5EB0F09110E43F80E4C862357FAFAAE6099A1592F07022FF446B0742A400C015E02E2AB1CB10FBBF8AB0D70D6491DE0DA0E345A784CFEB73E3C04D4B3DFC726A27FA276D6A4C47056%22%2C%22subChannel%22%3A%22feeds%E6%B5%81%22%2C%22lng%22%3A%2262a08f6788983aab59e41c8ea75ebf54f90f3c961d906c3c5dc8943e41731fe0%22%2C%22couponSourceDetail%22%3Anull%2C%22eid%22%3A%22eidIc53c81217fs8ni223iz6RzemO4UMVKKgWJ4tuEuaMOrgwe4l8JtEUlSh%5C/aGhA6T54E1HBQIbBabKuXIlImDNSCF%2BUoSe7eYTH8DAlBcbuYu95oVr%22%7D&build=167963&client=apple&clientVersion=10.3.6&d_brand=apple&d_model=iPhone12%2C1&ef=1&eid=eidIc53c81217fs8ni223iz6RzemO4UMVKKgWJ4tuEuaMOrgwe4l8JtEUlSh/aGhA6T54E1HBQIbBabKuXIlImDNSCF%2BUoSe7eYTH8DAlBcbuYu95oVr&ep=%7B%22ciphertype%22%3A5%2C%22cipher%22%3A%7B%22screen%22%3A%22ENS4AtO3EJS%3D%22%2C%22area%22%3A%22CJVpCJSnC18zDNK4XzcnDzOn%22%2C%22wifiBssid%22%3A%22DQHvD2PvYwDuDNvuENqyD2ZwDJOnZJZvZtVsCtUyZWY%3D%22%2C%22osVersion%22%3A%22CJUkCs4n%22%2C%22uuid%22%3A%22aQf1ZRdxb2r4ovZ1EJZhcxYlVNZSZz09%22%2C%22adid%22%3A%22DUC0GJu2CUUjHJKmGI00CJDPBUTODJujCtO0CNc3GJC0C0DM%22%2C%22openudid%22%3A%22CzZuYJvrEJU5CNvwYwYzD2C3CNdsD2GnENqyDJG0ZtZtCJC4ENZvCK%3D%3D%22%7D%2C%22ts%22%3A1644299668%2C%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22%2C%22version%22%3A%221.0.3%22%2C%22appname%22%3A%22com.360buy.jdmobile%22%2C%22ridx%22%3A-1%7D&ext=%7B%22prstate%22%3A%220%22%2C%22pvcStu%22%3A%221%22%7D&isBackground=N&joycious=44&lang=zh_CN&networkType=wifi&networklibtype=JDNetworkBaseAF&partner=apple&rfs=0000&scope=11&sign=95d02c5fa16a008c6e37ecd5a11fd083&st=1644300003201&sv=112&uemps=0-0&uts=0f31TVRjBSsqndu4/jgUPz6uymy50MQJkkTzNFVdh/hkbmP2i2twYYJqsu1pwkDGEOztzxjOoHX57XM62Pz4ZwHLpYOuLAAUo836uelXIM/zx812zSy22XgqIKVfRoxqQp35rLzr4XBugRGBEm0LvljjEmm9P5mhAltdeIb0sVmf2UHb9t6L8UVAmGqX/UD88IpsXffVP%2BL5cuFi93A5UQ%3D%3D"
   }
 }
 
