@@ -144,7 +144,7 @@ let args_xh = {
      * 例如B商品是种草官专属试用商品，下面设置为true，即使你是种草官账号，A商品也不会被添加到待提交试用组
      * 可设置环境变量：JD_TRY_PASSZC，默认为true
      * */
-    passZhongCao: process.env.JD_TRY_PASSZC === 'true' || true,
+    passZhongCao: process.env.JD_TRY_PASSZC === 'true',
     /*
      * 是否打印输出到日志，考虑到如果试用组长度过大，例如100以上，如果每个商品检测都打印一遍，日志长度会非常长
      * 打印的优点：清晰知道每个商品为什么会被过滤，哪个商品被添加到了待提交试用组
@@ -175,6 +175,10 @@ let args_xh = {
     sendNum: process.env.JD_TRY_SENDNUM * 1 || 4,
 }
 //上面很重要，遇到问题请把上面注释看一遍再来问
+tabId.sort(function() {
+    return (0.5-Math.random());
+});
+
 !(async() => {
     await $.wait(500)
     // 如果你要运行京东试用这个脚本，麻烦你把环境变量 JD_TRY 设置为 true
