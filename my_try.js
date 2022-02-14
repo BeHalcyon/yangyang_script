@@ -20,7 +20,7 @@ export JD_TRY_SENDNUM="10" #每隔多少账号发送一次通知，不需要可�
 export JD_TRY_UNIFIED="false" 默认采用不同试用组
 cron:20 1-22/5 * * *
  */
-const $ = new Env('京东试用')
+const $ = new Env('my试用')
 const URL = 'https://api.m.jd.com/client.action'
 let trialActivityIdList = []
 let trialActivityTitleList = []
