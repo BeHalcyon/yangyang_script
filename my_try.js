@@ -175,7 +175,7 @@ let args_xh = {
     sendNum: process.env.JD_TRY_SENDNUM * 1 || 4,
 }
 //上面很重要，遇到问题请把上面注释看一遍再来问
-tabId.sort(function() {
+args_xh.tabId.sort(function() {
     return (0.5-Math.random());
 });
 
