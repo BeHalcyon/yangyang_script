@@ -250,8 +250,10 @@ args_xh.tabId.sort(function() {
                             break
                         }
                         await try_apply(trialActivityTitleList[i], trialActivityIdList[i])
-                        console.log(`间隔等待中，请等待 ${args_xh.applyInterval} ms\n`)
-                        await $.wait(args_xh.applyInterval);
+                        // 随机等待args_xh.applyInterval+0~5秒
+                        var temp_round_time = Math.floor((Math.random()*5000))
+                        console.log(`间隔等待中，请等待 ${args_xh.applyInterval + temp_round_time} ms\n`)
+                        await $.wait(args_xh.applyInterval + temp_round_time);
                     }
                     console.log("试用申请执行完毕...")
                     // await try_MyTrials(1, 1)    //申请中的商品
