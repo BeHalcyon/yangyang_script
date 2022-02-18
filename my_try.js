@@ -18,7 +18,7 @@ export JD_TRY_APPLYNUMFILTER="100000" #过滤大于设定值的已申请人数
 export JD_TRY_MINSUPPLYNUM="1" #最小提供数量
 export JD_TRY_SENDNUM="10" #每隔多少账号发送一次通知，不需要可以不用设置
 export JD_TRY_UNIFIED="false" 默认采用不同试用组
-cron:20 1-22/5 * * *
+cron:20 1-22/2 * * *
  */
 const $ = new Env('my试用')
 const URL = 'https://api.m.jd.com/client.action'
