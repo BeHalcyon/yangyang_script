@@ -36,7 +36,7 @@ $.completeNum = 0;
 $.getNum = 0;
 $.try = true;
 $.sentNum = 0;
-$.cookiesArr = []
+$.cookiesArr = [];
 $.innerKeyWords =
     [
         "幼儿园", "教程", "英语", "辅导", "培训",
@@ -47,7 +47,11 @@ $.innerKeyWords =
         "宠物", "饲料", "磨脚",
         "脚皮", "除臭", "内裤", "龟头", "阴道", "阴部", "手机卡",
         "流量卡", "钢化膜", "手机壳","习题","试卷"
-    ]
+    ];
+
+$.applied_times = 0;
+let reply_times = 3;
+
 //下面很重要，遇到问题请把下面注释看一遍再来问
 let args_xh = {
     /*
@@ -249,7 +253,12 @@ args_xh.tabId.sort(function() {
                             console.log("试用上限")
                             break
                         }
+                        // 每次循环必执行
                         await try_apply(trialActivityTitleList[i], trialActivityIdList[i])
+                        // 根据已申请的次数判断当前是否更新i - 1，申请次数超过1的话，说明该商品被风控了，继续再请求一次。
+                        if ($.applied_times != 0) {
+                            i--;
+                        }
                         // 随机等待args_xh.applyInterval+0~5秒
                         var temp_round_time = Math.floor((Math.random()*5000))
                         console.log(`间隔等待中，请等待 ${args_xh.applyInterval + temp_round_time} ms\n`)
@@ -497,11 +506,18 @@ function try_apply(title, activityId) {
                 if(err){
                     if(JSON.stringify(err) === `\"Response code 403 (Forbidden)\"`){
                         $.isForbidden = true
-                        console.log('账号被京东服务器风控，不再请求该帐号')
+                        console.log(`账号被京东服务器风控，当前是第${$.applied_times + 1}/${reply_times}次申请。`)
                     } else {
                         console.log(JSON.stringify(err))
                         console.log(`${$.name} API请求失败，请检查网路重试`)
                     }
+                    // 申请超过2次都为err后才下一个
+                    $.applied_times++;
+                    // 如果申请次数超过2，就不再请求该商品了
+                    if ($.applied_times >= reply_times) {
+                        $.applied_times = 0;
+                    }
+                    
                 } else {
                     $.totalTry++
                     data = JSON.parse(data)
@@ -524,6 +540,7 @@ function try_apply(title, activityId) {
                     } else {
                         console.log("申请失败", data)
                     }
+                    $.applied_times = 0;
                 }
             } catch (e) {
                 reject(`⚠️ ${arguments.callee.name.toString()} API返回结果解析出错\n${e}\n${JSON.stringify(data)}`)
