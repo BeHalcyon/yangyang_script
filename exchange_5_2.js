@@ -8,7 +8,10 @@ let ck_str = process.env.YANGYANG_EXCHANGE_CKS ? process.env.YANGYANG_EXCHANGE_C
 
 let ck_str_items=ck_str.split("@");  //分割成字符串数组
 let ck_int_items=[];//保存转换后的整型字符串
-   
+
+// 当抢券结果为D2，说明券空了，直接返回
+let return_flag = "D2";
+let cur_flag = "none";
 
 
 const $ = new Env('极速版5-2抢券');
@@ -93,6 +96,9 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         $.nickName = '';
         message = '';
         await jdCar();
+        if (cur_flag == return_flag) {
+          return;
+        }
       }
     }
 })()
@@ -127,6 +133,9 @@ function exchange() {
           if (safeGet(data)) {
             data = JSON.parse(data);
             console.log(`抢券结果：${JSON.stringify(data)}\n`)
+            if (data.subCode == return_flag) {
+              cur_flag = data.subCode
+            }
           }
         }
       } catch (e) {
