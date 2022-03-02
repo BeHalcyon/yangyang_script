@@ -89,7 +89,6 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   // 等57秒再抢
   await wait(waiting_time)
   for (let j = 0; j < randomCount; ++j)
-    // 抢第1-5个号
     for (let i = 0; i < cookiesArr.length; i++) {
       if (cookiesArr[i]) {
         cookie = cookiesArr[i];
@@ -99,7 +98,7 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         $.isLogin = true;
         $.nickName = '';
         message = '';
-        await jdCar();
+        await exchange();
         if (cur_flag == return_flag) {
           return;
         }
@@ -113,9 +112,6 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
     $.done();
   })
 
-async function jdCar() {
-  await exchange()
-}
 
 function showMsg() {
   return new Promise(resolve => {
