@@ -24,7 +24,8 @@ function exchangeRedPacket() {
                 }
             }
         // await $.notify.sendNotify(`${$.name}`, `${message}`)
-        showMsg()
+        // showMsg()
+        await $.notify.sendNotify(`${$.name}`, `${message}`)
     }
     )()
         .catch((e) => {
@@ -119,7 +120,7 @@ function Env(t, e) { "undefined" != typeof process && JSON.stringify(process.env
 
 const $ = new Env('京东邀新提红30');
 const moment = require('moment');
-const notify = $.isNode() ? require('./sendNotify') : '';
+$.notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let jdNotify = true;//是否关闭通知，false打开通知推送，true关闭通知推送
