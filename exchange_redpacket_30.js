@@ -25,10 +25,12 @@ function exchangeRedPacket() {
             }
         // await $.notify.sendNotify(`${$.name}`, `${message}`)
         // showMsg()
-        await $.notify.sendNotify(`${$.name}`, `${message}`)
-        $.msg($.name, `提取红包成功`, `${message}`, {
-                        "open-url": "https://bean.m.jd.com/bean/signIndex.action"
-                    });
+        if (message.length != 0) {
+            await $.notify.sendNotify(`${$.name}`, `${message}`)
+            $.msg($.name, `提取红包成功`, `${message}`, {
+                            "open-url": "https://bean.m.jd.com/bean/signIndex.action"
+                        });
+        }
     }
     )()
         .catch((e) => {
