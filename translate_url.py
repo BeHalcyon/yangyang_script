@@ -17,5 +17,8 @@ header = 'https://api.m.jd.com/client.action?functionId=withdrawRedPocket&client
 header = 'https://api.m.jd.com/client.action?functionId=withdrawRedPocket&client=wh5&clientVersion=1.0.0&uuid=865441035434968-4c49e3f54533'
 body = '{"depositeType":1}'
 
+header = 'https://api.m.jd.com/client.action?functionId=withdrawWechat&client=wh5&clientVersion=1.0.0'
+body = '{"depositeType":3,"wechatCode":"051Nd4Ga1JxFPC06SHIa1oX4Iz1Nd4Gv"}'
+
 print(url(header, body))
 

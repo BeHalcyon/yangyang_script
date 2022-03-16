@@ -1,7 +1,22 @@
 /*
-2021.01.09 京东邀新提红100 [exchange_5_2.js]
-cron:0 59 6,9,14,17,20 * * *
+2021.01.09 京东邀新提红100 [exchange_redpacket_100.js]
+cron:0 59 23,11 * * *
  */
+
+
+function test(){
+    console.log("test message");
+}
+
+
+var date = new Date();//现在时刻
+var dateIntegralPoint = new Date();//用户登录时刻的下一个整点，也可以设置成某一个固定时刻
+// dateIntegralPoint.setHours(date.getHours()+1);//小时数增加1
+dateIntegralPoint.setMinutes(date.getMinutes()+1);
+dateIntegralPoint.setSeconds(0);
+setTimeout(test, dateIntegralPoint-date);//用户登录后的下一个整点执行。
+
+exit()
 
 
 let ck_str = process.env.YANGYANG_EXCHANGE_REDPACKET_CKS ? process.env.YANGYANG_EXCHANGE_REDPACKET_CKS : "0@1"; // 需要抢的号
@@ -30,7 +45,7 @@ if ($.isNode()) {
 }
 
 // let waiting_time =  process.env.YANGYANG_EXCHANGE_WAITING_TIME ? parseInt(process.env.YANGYANG_EXCHANGE_WAITING_TIME) : 56000;
-let waiting_time = 1000;
+let waiting_time = 59000;
 
 const h = (new Date()).getHours()
 
@@ -56,7 +71,7 @@ for (let i = 0; i < ck_int_items_mask.length; i ++) {
 
 cookiesArr = buf_cookiesArr;
 // 循环次数
-let randomCount = process.env.YANGYANG_EXCHANGE_LOOP_TIMES ? Math.ceil(parseInt(process.env.YANGYANG_EXCHANGE_LOOP_TIMES) / cookiesArr.length) : 10;
+let randomCount = process.env.YANGYANG_EXCHANGE_REDPACKET_LOOP_TIMES ? Math.ceil(parseInt(process.env.YANGYANG_EXCHANGE_REDPACKET_LOOP_TIMES) / cookiesArr.length) : 10;
 console.log("循环次数为", randomCount);
 console.log("总循环次数为", randomCount*cookiesArr.length);
 
@@ -68,7 +83,7 @@ let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
     return;
   }
   console.log("准备开始抢券！")
-  // 等57秒再抢
+  // 等59秒再抢
   await wait(waiting_time)
   for (let j = 0; j < randomCount; ++j)
     for (let i = 0; i < cookiesArr.length; i++) {
