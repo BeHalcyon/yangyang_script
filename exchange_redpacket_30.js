@@ -64,9 +64,9 @@ function exchange() {
                     data = JSON.parse(data)
                     console.log(moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
                     console.log(JSON.stringify(data) + '\n\n');
-                    if (!data.hasOwnProperty("hongBao")) {
+                    if (data.hasOwnProperty("hongBao")) {
                         setSuccessMessage();
-                        console.log(message)
+                        // console.log(message)
                     }
                 }
             } catch (e) {
