@@ -151,5 +151,5 @@ var date = new Date();//现在时刻
 var dateIntegralPoint = new Date();//用户登录时刻的下一个整点，也可以设置成某一个固定时刻
 
 dateIntegralPoint.setMinutes(date.getMinutes() + 1);//分钟数增加1
-dateIntegralPoint.setSeconds(0, -19); // 服务器计算、传输延迟200ms
+dateIntegralPoint.setSeconds(0, -190); // 服务器计算、传输延迟200ms
 setTimeout(exchangeRedPacket, dateIntegralPoint - date);//用户登录后的下一个整点执行。
