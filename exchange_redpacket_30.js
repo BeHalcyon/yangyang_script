@@ -26,6 +26,9 @@ function exchangeRedPacket() {
         // await $.notify.sendNotify(`${$.name}`, `${message}`)
         // showMsg()
         await $.notify.sendNotify(`${$.name}`, `${message}`)
+        $.msg($.name, `提取红包成功`, `${message}`, {
+                        "open-url": "https://bean.m.jd.com/bean/signIndex.action"
+                    });
     }
     )()
         .catch((e) => {
@@ -107,7 +110,7 @@ let ck_str_items = ck_str.split("@");  //分割成字符串数组
 
 
 //IOS等用户直接用NobyDa的jd cookie
-let cookiesArr = [], cookie = '', message;
+let cookiesArr = [], cookie = '', message = "";
 
 Object.keys(jdCookieNode).forEach((item) => {
     cookiesArr.push(jdCookieNode[item])
