@@ -23,7 +23,8 @@ function exchangeRedPacket() {
                     await exchange();
                 }
             }
-        await $.notify.sendNotify(`${$.name}`, `${message}`)
+        // await $.notify.sendNotify(`${$.name}`, `${message}`)
+        showMsg()
     }
     )()
         .catch((e) => {
@@ -32,6 +33,13 @@ function exchangeRedPacket() {
         .finally(() => {
             $.done();
         })
+}
+
+function showMsg() {
+    return new Promise(resolve => {
+        $.msg($.name, '', `【京东账号${$.index}】${$.nickName}\n${message}`);
+        resolve()
+    })
 }
 
 function setSuccessMessage() {
@@ -48,11 +56,11 @@ function exchange() {
                     console.log(`${$.name} user/exchange/bean API请求失败，请检查网路重试\n`)
                 } else {
                     data = JSON.parse(data)
-                    if (data.hasOwnProperty("hongBao")) {
+                    console.log(moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+                    console.log(JSON.stringify(data) + '\n\n');
+                    if (!data.hasOwnProperty("hongBao")) {
                         setSuccessMessage();
                     }
-                    console.log(moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
-                    console.log(JSON.stringify(data + '\n\n'));
                 }
             } catch (e) {
                 $.logErr(e, resp)
