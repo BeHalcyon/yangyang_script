@@ -1,13 +1,13 @@
 /*
 2021.03.16 京东邀新提红30 [exchange_redpacket_30.js]
 静态监控 --> 动态监控
-cron:0 59 23,11 * * *
+cron:0 1 0,12 * * *
  */
 
 function exchangeRedPacket() {
     !(async () => {
 
-        console.log("\n\n准备开始抢券！")
+        console.log("\n\n准备开始抢兑换！")
         console.log(`当前时间为：${new Date()}\n\n`)
 
         for (let j = 0; j < randomCount; ++j)

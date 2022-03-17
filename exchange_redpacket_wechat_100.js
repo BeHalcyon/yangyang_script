@@ -9,7 +9,7 @@ let wechatCode = "031qj6ml2W7TP849MUnl2a4Syt0qj6mu"
 function exchangeRedPacket() {
     !(async () => {
 
-        console.log("准备开始抢券！")
+        console.log("准备开始抢兑换！")
         console.log(`当前时间为：${new Date()}`)
 
         for (let j = 0; j < randomCount; ++j)
