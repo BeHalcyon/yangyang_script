@@ -1,12 +1,12 @@
 #!/bin/env python3
 # -*- coding: utf-8 -*
 '''
-项目名称:exchange_10_4.py
+项目名称:exchange_29_8.py
 Author: yangyang
 功能：
 Date: 2022-3-21
-cron: 0 59 7,10,13,15,19 * * *
-new Env('极速版抢券10_4(python)');
+cron: 0 59 8,11,14,16,19 * * *
+new Env('极速版抢券29减8(python)');
 '''
 
 UserAgent = ''
