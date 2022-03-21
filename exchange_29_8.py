@@ -6,15 +6,8 @@ Author: yangyang
 功能：
 Date: 2022-3-21
 cron: 0 59 8,11,14,16,19 * * *
-new Env('极速版29减8(python)');
+new Env("极速版29减8(python)");
 '''
-
-UserAgent = ''
-cookie = ''
-account = ''
-charge_targe_id = ''
-cookies = []
-charge_targe_ids = ''
 
 import requests
 import time,datetime
@@ -24,18 +17,7 @@ import threading
 import urllib3
 import multiprocessing
 import random
-
-requests.packages.urllib3.disable_warnings()
-today = datetime.datetime.now().strftime('%Y-%m-%d')
-tomorrow=(datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-nowtime = datetime.datetime.now ().strftime ('%Y-%m-%d %H:%M:%S.%f8')
-
-pwd = os.path.dirname(os.path.abspath(__file__)) + os.sep
-path = pwd + "env.sh"
-
-
-sid = ''.join (random.sample ('123456789abcdef123456789abcdef123456789abcdef123456789abcdef', 32))
-sid_ck = ''.join (random.sample ('123456789abcdef123456789abcdef123456789abcdef123456789abcdefABCDEFGHIJKLMNOPQRSTUVWXYZ', 43))
+import time
 
 def printT(s):
     print("[{0}]: {1}".format(datetime.datetime.now(), s), flush=True)
@@ -60,10 +42,6 @@ def getEnvs(label):
             return int(label)
     except:
         return label
-
-cookies1 = []
-cookies1 = os.environ["JD_COOKIE"]
-cookies = cookies1.split ('&')
 
 def userAgent():
     """
@@ -142,7 +120,7 @@ class msg(object):
             except:
                 printT("加载通知服务失败~")
         ###################
-msg().main()
+
 
 
 def setName(cookie):
@@ -182,25 +160,51 @@ def exchange(process_id, cks):
     for t in range(loop_times):
         for ck in cks:
             result = postUrl(ck, setName(ck), process_id)
-            msg(f"进程：{process_id}-{t+1}/{loop_times} 账号：{setName(ck)} {result}")
+            msg(f"进程：{process_id}-{t+1}/{loop_times} 账号：{setName(ck)} {result['subCodeMsg'] if 'subCodeMsg' in result.keys() else result}")
             if result['subCode'] == 'D2':
                 flag = True
                 break
         if flag:
             break
 
-# 前n个号
-# cookies = cookies
+
+requests.packages.urllib3.disable_warnings()
+
+UserAgent = ''
+pwd = os.path.dirname(os.path.abspath(__file__)) + os.sep
+path = pwd + "env.sh"
+
+sid = ''.join (random.sample ('123456789abcdef123456789abcdef123456789abcdef123456789abcdef', 32))
+sid_ck = ''.join (random.sample ('123456789abcdef123456789abcdef123456789abcdef123456789abcdefABCDEFGHIJKLMNOPQRSTUVWXYZ', 43))
+
+cookies = os.environ["JD_COOKIE"].split('&')
+
+all_cks_start, all_cks_end = 23, 23
+if 'YANGYANG_EXCHANGE_FULI_START_HOUR' in os.environ:
+    all_cks_start = getEnvs(os.environ['YANGYANG_EXCHANGE_FULI_START_HOUR'])
+if 'YANGYANG_EXCHANGE_FULI_END_HOUR' in os.environ:
+    all_cks_end = getEnvs(os.environ['YANGYANG_EXCHANGE_FULI_END_HOUR'])
+
+cur_hours = datetime.datetime.now().hour
+
+if not (all_cks_start <= cur_hours <= all_cks_end) and 'YANGYANG_EXCHANGE_CKS' in os.environ:
+    ck_ids = [int(x) for x in getEnvs(os.environ['YANGYANG_EXCHANGE_CKS'])]
+    buf_cookies = []
+    for x in getEnvs(os.environ['YANGYANG_EXCHANGE_CKS']):
+        buf_cookies.append(cookies[int(x)])
+    cookies = buf_cookies
+
+
+msg().main()
 
 nex_minute = (datetime.datetime.now() + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
 waiting_time = (nex_minute - datetime.datetime.now()).total_seconds()
-loop_times = 3
+loop_times = 30 // len(cookies) + 1
 
 msg(f"等待{waiting_time}s")
-# waiting 
-import time
+
+# waiting # 部署时需要去掉注释
 time.sleep(waiting_time - 1)
-# sleep(nex_minute - datetime.datetime.now())
 
 msg("Sub-process(es) start.")
 pool = multiprocessing.Pool(processes = 4)
@@ -211,6 +215,4 @@ for i in range(4):
 pool.close()
 pool.join()
 msg("Sub-process(es) done.")
-# for ck in cookies[-5:]:
-#     exchange(ck, setName(ck))
 
