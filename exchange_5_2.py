@@ -1,0 +1,15 @@
+#!/bin/env python3
+# -*- coding: utf-8 -*
+'''
+项目名称:exchange_5_2.py
+Author: yangyang
+功能：
+Date: 2022-3-21
+cron: 0 59 6,9,14,17,20 * * *
+new Env("极速版5减2(python)");
+'''
+
+from exchange_lib import exchangeCoupons
+
+body = r"body=%7B%22activityId%22%3A%223H885vA4sQj6ctYzzPVix4iiYN2P%22%2C%22scene%22%3A%221%22%2C%22args%22%3A%22key%3D82955FF5B19B4873DD7044D75B44AD907C1A9FECE3BD974B2E35492750271EA91192D5362104AA91EDD08FFB7EFA944C_bingo%2CroleId%3D04BCD352B47E5A8B92C7D4ED398FBE33_bingo%2CstrengthenKey%3D10512DF4C3CA58276FBA323D56C1FDA0D96E4E9F80D4E5620B7629495B26C2249A59264530560F8D94FE6B110A999A32_bingo%22%7D"
+exchangeCoupons(body=body)
