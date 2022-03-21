@@ -6,7 +6,7 @@ Author: yangyang
 功能：
 Date: 2022-3-21
 cron: 0 59 8,11,14,16,19 * * *
-new Env('极速版抢券29减8(python)');
+new Env('极速版29减8(python)');
 '''
 
 UserAgent = ''
