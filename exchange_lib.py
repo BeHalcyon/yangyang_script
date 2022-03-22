@@ -151,7 +151,7 @@ def exchange(process_id, cks, loop_times, url, body):
             response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'], data=request_url['body'])
             result = response.json()
             msg(f"进程：{process_id}-{t+1}/{loop_times} 账号：{getUserName(ck)} {result['subCode'] + ' : ' + result['subCodeMsg'] if 'subCodeMsg' in result.keys() else result}")
-            if 'subCode' in result.keys() and result['subCode'] == 'D2' or result['subCode'] == 'A14':
+            if 'subCode' in result.keys() and result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
                 flag = True
                 break
         if flag:

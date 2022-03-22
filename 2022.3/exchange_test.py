@@ -1,13 +1,6 @@
 #!/bin/env python3
 # -*- coding: utf-8 -*
-'''
-项目名称:exchange_29_8.py
-Author: yangyang
-功能：
-Date: 2022-3-21
-cron: 0 59 8,11,14,16,19 * * *
-new Env("极速版29减8");
-'''
+
 from exchange_lib import *
 
 url = 'https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0'
