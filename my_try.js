@@ -52,6 +52,8 @@ $.innerKeyWords =
 $.applied_times = 0;
 let reply_times = 3;
 
+let try_cks_number = process.env.JD_TRY_NUMBER ? parseInt(process.env.JD_TRY_NUMBER) : 4
+
 //下面很重要，遇到问题请把下面注释看一遍再来问
 let args_xh = {
     /*
@@ -194,7 +196,7 @@ args_xh.tabId.sort(function() {
             })
             return
         }
-        for (let i = 0; i < $.cookiesArr.length && i < 4; i++) {
+        for (let i = 0; i < $.cookiesArr.length && i < try_cks_number; i++) {
             if ($.cookiesArr[i]) {
                 $.cookie = $.cookiesArr[i];
                 $.UserName = decodeURIComponent($.cookie.match(/pt_pin=(.+?);/) && $.cookie.match(/pt_pin=(.+?);/)[1])
