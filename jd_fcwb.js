@@ -23,8 +23,8 @@ if ($.isNode()) {
         ...$.toObj($.getdata("CookiesJD") || "[]").map((item) => item.cookie)].filter((item) => !!item);
 }
 let cookie = '';
-let fcwbinviter = "";
-let fcwbinviteCode = "";
+let fcwbinviter = "tFFVDUNHIO6TpJiWhKE_WA";
+let fcwbinviteCode = "9bdc37759f9c4f3bbc82d505b34fc39916781648224015324";
 !(async () => {
     if (!cookiesArr[0]) {
         $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
@@ -109,7 +109,8 @@ async function doTask(){
         if(oneTask.taskType === 'BROWSE_CHANNEL'){
             if(oneTask.id === 360){
                 console.log(`任务：${oneTask.taskTitle},${oneTask.taskShowTitle},去执行`);
-                let doTask = await takeRequest(`apDoTask`,`{"linkId":"${link}","taskType":"${oneTask.taskType}","taskId":${oneTask.id},"channel":4,"itemId":"${encodeURIComponent(oneTask.taskSourceUrl)}","checkVersion":false}`);
+                // let doTask = await takeRequest(`apDoTask`,`{"linkId":"${link}","taskType":"${oneTask.taskType}","taskId":${oneTask.id},"channel":4,"itemId":"${encodeURIComponent(oneTask.taskSourceUrl)}","checkVersion":false}`);
+                let doTask = await takeRequest(`happyDigHelp`,`{"linkId":"${link}","inviter":"tFFVDUNHIO6TpJiWhKE_WA","inviteCode":"9bdc37759f9c4f3bbc82d505b34fc39916781648224015324"}`);
                 console.log(`执行结果：${JSON.stringify(doTask)}`);
                 await $.wait(2000);
                 $.freshFlag = true;
