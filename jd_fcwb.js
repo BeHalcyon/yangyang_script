@@ -8,6 +8,9 @@ cron 40 12,16 * * * https://raw.githubusercontent.com/star261/jd/main/scripts/jd
 const $ = new Env('发财挖宝');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 const notify = $.isNode() ? require('./sendNotify') : '';
+const CryptoJS = require('crypto-js');
+const moment = require('moment');
+const { getH5st, init } = require('./cry_pt.js');
 let cookiesArr = [];
 let link = `pTTvJeSTrpthgk9ASBVGsw`;
 if ($.isNode()) {
@@ -22,10 +25,22 @@ if ($.isNode()) {
         $.getdata("CookieJD2"),
         ...$.toObj($.getdata("CookiesJD") || "[]").map((item) => item.cookie)].filter((item) => !!item);
 }
+
+
+params = { appid: 'activities_platform', functionId: 'happyDigHelp', body: {"linkId":"pTTvJeSTrpthgk9ASBVGsw","round":3,"inviter":"tFFVDUNHIO6TpJiWhKE_WA","inviteCode":"9bdc37759f9c4f3bbc82d505b34fc39916781648224015324"}, now: new Date() }
+
+
 let cookie = '';
 let fcwbinviter = "tFFVDUNHIO6TpJiWhKE_WA";
 let fcwbinviteCode = "9bdc37759f9c4f3bbc82d505b34fc39916781648224015324";
 !(async () => {
+    
+    await init();
+    // const h5st = getH5st({ appid: 'activities_platform', functionId: 'happyDigHelp', body: {"linkId":"pTTvJeSTrpthgk9ASBVGsw","round":3,"inviter":"tFFVDUNHIO6TpJiWhKE_WA","inviteCode":"9bdc37759f9c4f3bbc82d505b34fc39916781648224015324"}, now: new Date() });
+    // console.log(h5st)
+
+
+
     if (!cookiesArr[0]) {
         $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
         return;
@@ -42,7 +57,7 @@ let fcwbinviteCode = "9bdc37759f9c4f3bbc82d505b34fc39916781648224015324";
         fcwbinviter = actCodeInfo.fcwbinviter;
         fcwbinviteCode = actCodeInfo.fcwbinviteCode;
     }*/
-    for (let i = 0; i < cookiesArr.length; i++) {
+    for (let i = 0; i < 5; i++) {
         if (cookiesArr[i]) {
             cookie = cookiesArr[i];
             $.UserName = decodeURIComponent(cookie.match(/pt_pin=(.+?);/) && cookie.match(/pt_pin=(.+?);/)[1])
@@ -71,6 +86,8 @@ let fcwbinviteCode = "9bdc37759f9c4f3bbc82d505b34fc39916781648224015324";
     $.done();
 });
 
+
+
 async function main() {
     let homeInfo = await takeRequest(`happyDigHome`,`{"linkId":"${link}"}`,true);
     if(JSON.stringify(homeInfo) === '{}' || !homeInfo){
@@ -82,8 +99,10 @@ async function main() {
     console.log(`fcwbinviter='${homeInfo.markedPin}'`)
     if(fcwbinviter && fcwbinviteCode){
         console.log(`去助力:${fcwbinviter}`);
-        await takeRequest(`happyDigHelp`,`{"linkId":"${link}","inviter":"${fcwbinviter}","inviteCode":"${fcwbinviteCode}"}`);
-        console.log(`助力结果：${JSON.stringify(homeInfo)}`);
+        
+        let b = await takeRequest(`happyDigHelp`,`{"linkId":"${link}","round":3,"inviter":"${fcwbinviter}","inviteCode":"${fcwbinviteCode}"}`, true);
+        // await exchange();
+        console.log(`助力结果：${JSON.stringify(b)}`);
     }
     $.freshFlag = false;
     if($.index === 1){
@@ -93,11 +112,54 @@ async function main() {
     // await doTask();
     if($.freshFlag){
         await $.wait(2000);
+        
         homeInfo = await takeRequest(`happyDigHome`,`{"linkId":"${link}"}`,true);
     }
     let blood = homeInfo.blood;
     console.log(`当前有${blood}滴血`);
 }
+
+
+function exchange() {
+    return new Promise(resolve => {
+      $.post(taskUrl('functionId=lite_newBabelAwardCollection'), (err, resp, data) => {
+        try {
+          if (err) {
+            console.log(`${JSON.stringify(err)}`)
+            console.log(`${$.name} user/exchange/bean API请求失败，请检查网路重试\n`)
+          } else {
+            console.log(moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+            console.log(data);
+          }
+        } catch (e) {
+          $.logErr(e, resp)
+        } finally {
+          resolve();
+        }
+      })
+    })
+  }
+  
+  function taskUrl(function_id, body = {}) {
+    return {
+        url: `https://api.m.jd.com/?functionId=happyDigHelp&t=${Date.now()}&appid=activities_platform&client=wh5&clientVersion=1.0.0`,
+      // url: `${JD_API_HOST}${function_id}?timestamp=${new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000}`,
+    //   url: `https://api.m.jd.com/?functionId=happyDigHelp&client=wh5&clientVersion=1.0.0`,
+      headers: {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "zh-cn",
+        "Connection": "keep-alive",
+        "Content-Type": "application/x-www-form-urlencoded",
+        'origin': 'https://prodev.m.jd.com',
+        "Referer": "https://prodev.m.jd.com/jdlite/active/3qRAXpNehcsUpToARD9ekP4g6Jhi/index.html?__in_task_view__=jdLiteiOS&lng=113.501145&lat=22.239933&sid=2914b193bd74ab1111eb83e2ed369f8w&un_area=19_1607_3639_59644",
+        "Cookie": cookie,
+        "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
+      },
+      body: "body=%7B%22linkId%22%3A%22pTTvJeSTrpthgk9ASBVGsw%22%2C%22inviter%22%3A%22tFFVDUNHIO6TpJiWhKE_WA%22%2C%22inviteCode%22%3A%229bdc37759f9c4f3bbc82d505b34fc39916781648224015324%22%7D"
+    }
+  }
+
 async function doTask(){
     let taskList = await takeRequest(`apTaskList`,`{"linkId":"${link}"}`);
     for (let i = 0; i < taskList.length; i++) {
@@ -132,9 +194,13 @@ async function doTask(){
 }
 
 async function takeRequest(functionId,bodyInfo,h5stFlag = false){
-    let  url = `https://api.m.jd.com/?functionId=${functionId}&body=${encodeURIComponent(bodyInfo)}&t=${Date.now()}&appid=activities_platform&client=H5&clientVersion=1.0.0`;
+    let a = new Date()
+    let h5st = getH5st({ appid: 'activities_platform', functionId: 'happyDigHelp', body: {"linkId":"pTTvJeSTrpthgk9ASBVGsw","round":3,"inviter":"7HszDEkGBS5FTmo8_5K7aA","inviteCode":"092f898036e8496bac94690645a4583164991648224039061"}, now: new Date() });
+    console.log(h5st)
+    console.log(a.getTime(), Date.now())
+    let  url = `https://api.m.jd.com/?functionId=${functionId}&body=${encodeURIComponent(bodyInfo)}&t=${a.getTime()}&appid=activities_platform&client=H5&clientVersion=1.0.0&h5st=${h5st}`;
     if(h5stFlag){
-        //url = await getH5stUrl(functionId,bodyInfo);
+        // url = await getH5stUrl(functionId, bodyInfo);
     }
     const headers = {
         'Host' : `api.m.jd.com`,
@@ -143,7 +209,7 @@ async function takeRequest(functionId,bodyInfo,h5stFlag = false){
         'Cookie' : cookie ,
         'Accept-Encoding' : `gzip, deflate, br`,
         'user-agent': $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
-        'Accept-Language' : `zh-cn`,
+        'Accept-Language' : `zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7`,
         'Referer' : `https://bnzf.jd.com/?activityId=${link}`
     };
     let sentInfo = {url: url, headers: headers};
