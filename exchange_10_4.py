@@ -5,7 +5,7 @@
 Author: yangyang
 功能：
 Date: 2022-3-21
-cron: 45 59 7,10,15,19 * * *
+cron: 45 59 7,10,13,19 * * *
 new Env("极速版10减4(python)");
 '''
 
