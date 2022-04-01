@@ -174,17 +174,30 @@ def exchange(process_id, cks, loop_times, url, body):
         },
         'body': body,
     }
+    flag_arr = [True]*len(cks)
     for t in range(loop_times):
-        for ck in cks:
+        for i in range(len(cks)):
+            if not flag_arr[i]: continue
+            ck = cks[i]
             request_url['headers']['Cookie'] = ck
             request_url['headers']['User-Agent'] = userAgent()
             response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'], data=request_url['body'])
             result = response.json()
             msg(f"进程：{process_id}-执行次数：{t+1}/{loop_times}\n账号：{getUserName(ck)} {result['subCode'] + ' : ' + result['subCodeMsg'] if 'subCodeMsg' in result.keys() else result}")
-            if 'subCode' in result.keys() and result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
-            # if 'subCode' in result.keys() and (result['subCode'] == 'A14' or result['subCode'] == 'A25'): # 今日没了；火爆了
-                flag = True
-                break
+            # if 'subCode' in result.keys() and (result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25'): # 当前时间段抢空；今日没了；火爆了
+            # # if 'subCode' in result.keys() and (result['subCode'] == 'A14' or result['subCode'] == 'A25'): # 今日没了；火爆了
+            #     flag = True
+            #     break
+            if 'subCode' in result.keys():
+                if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
+                    # 直接停止该线程
+                    flag = True
+                    break
+                if result['subCode'] == 'A13' or result['subCode'] == 'A28': # 今日已领取；很抱歉没抢到
+                    # 停止该号
+                    flag_arr[i] = False
+                    msg(f"账号：{getUserName(ck)}：{result['subCodeMsg']}")
+
         if flag:
             break
 
@@ -218,8 +231,8 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
         cookies = buf_cookies
 
     # 过滤
-    cookies = filterCks(cookies, url, body)
-    print("待抢账号：", cookies)
+    # cookies = filterCks(cookies, url, body)
+    print("待抢账号：", "\n".join([getUserName(ck) for ck in cookies]))
 
     process_number = 8
     # 打乱数组
