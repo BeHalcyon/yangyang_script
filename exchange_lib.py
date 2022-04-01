@@ -153,8 +153,8 @@ def exchange(process_id, cks, loop_times, url, body):
             response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'], data=request_url['body'])
             result = response.json()
             msg(f"进程：{process_id}-执行次数：{t+1}/{loop_times}\n账号：{getUserName(ck)} {result['subCode'] + ' : ' + result['subCodeMsg'] if 'subCodeMsg' in result.keys() else result}")
-            # if 'subCode' in result.keys() and result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
-            if 'subCode' in result.keys() and (result['subCode'] == 'A14' or result['subCode'] == 'A25'): # 今日没了；火爆了
+            if 'subCode' in result.keys() and result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
+            # if 'subCode' in result.keys() and (result['subCode'] == 'A14' or result['subCode'] == 'A25'): # 今日没了；火爆了
                 flag = True
                 break
         if flag:
@@ -194,16 +194,17 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
 
     nex_minute = (datetime.datetime.now() + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
     waiting_time = (nex_minute - datetime.datetime.now()).total_seconds()
-    loop_times = 30 // len(cookies) + 1
+    loop_times = 15 // len(cookies) + 1
 
     msg(f"等待{waiting_time}s")
 
     # waiting # 部署时需要去掉注释
-    time.sleep(max(waiting_time - 1, 0))
+    time.sleep(max(waiting_time - 0.75, 0))
 
     msg("Sub-process(es) start.")
-    pool = multiprocessing.Pool(processes = 4)
-    for i in range(4):
+    process_number = 8
+    pool = multiprocessing.Pool(processes = process_number)
+    for i in range(process_number):
         random.shuffle(cookies)
         pool.apply_async(exchange, (i+1, cookies.copy(), loop_times, url, body, ))
 
