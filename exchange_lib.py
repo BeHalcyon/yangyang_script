@@ -36,6 +36,7 @@ def getEnvs(label):
         return label
 
 def userAgent():
+    
     """
     随机生成一个UA
     :return: jdapp;iPhone;9.4.8;14.3;xxxx;network/wifi;ADID/201EDE7F-5111-49E8-9F0D-CCF9677CD6FE;supportApplePay/0;hasUPPay/0;hasOCPay/0;model/iPhone13,4;addressid/2455696156;supportBestPay/0;appBuild/167629;jdSupportDarkMode/0;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1
@@ -148,6 +149,7 @@ def exchange(process_id, cks, loop_times, url, body):
     for t in range(loop_times):
         for ck in cks:
             request_url['headers']['Cookie'] = ck
+            request_url['headers']['User-Agent'] = userAgent()
             response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'], data=request_url['body'])
             result = response.json()
             msg(f"进程：{process_id}-执行次数：{t+1}/{loop_times}\n账号：{getUserName(ck)} {result['subCode'] + ' : ' + result['subCodeMsg'] if 'subCodeMsg' in result.keys() else result}")
