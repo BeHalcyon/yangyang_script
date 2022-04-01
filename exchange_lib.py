@@ -189,6 +189,12 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
             buf_cookies.append(cookies[int(x)])
         cookies = buf_cookies
 
+    process_number = 8
+    # 打乱数组
+    cookies_array = []
+    for i in range(process_number):
+        random.shuffle(cookies)
+        cookies_array.append(cookies.copy())
 
     msg().main()
 
@@ -205,8 +211,8 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
     process_number = 8
     pool = multiprocessing.Pool(processes = process_number)
     for i in range(process_number):
-        random.shuffle(cookies)
-        pool.apply_async(exchange, (i+1, cookies.copy(), loop_times, url, body, ))
+        # random.shuffle(cookies)
+        pool.apply_async(exchange, (i+1, cookies_array[i], loop_times, url, body, ))
 
     pool.close()
     pool.join()
