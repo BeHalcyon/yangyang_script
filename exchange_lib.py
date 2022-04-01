@@ -129,6 +129,34 @@ def postUrl(request_url):
     response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'], data=request_url['body'])
     return response.json()
 
+
+def filterCks(cks, url, body):
+    request_url = {
+        'url': url,
+        'headers': {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "zh-cn",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded",
+            'origin': 'https://pro.m.jd.com',
+            "Referer": "https://pro.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?lng=106.476617&lat=29.502674&sid=fbc43764317f538b90e0f9ab43c8285w&un_area=4_50952_106_0",
+            "Cookie": "None",
+            "User-Agent": userAgent(),
+        },
+        'body': body,
+    }
+    buf_cks = []
+    for ck in cks:
+        request_url['headers']['Cookie'] = ck
+        response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'], data=request_url['body'])
+        result = response.json()
+        if 'subCode' in result.keys() and (result['subCode'] == 'A13' or result['subCode'] == 'A28'): # 今日已领取；很抱歉没抢到
+            continue
+        buf_cks.append(ck)
+    return buf_cks
+
+
 def exchange(process_id, cks, loop_times, url, body):
     flag = False
     request_url = {
@@ -188,6 +216,10 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
         for x in getEnvs(os.environ['YANGYANG_EXCHANGE_CKS']):
             buf_cookies.append(cookies[int(x)])
         cookies = buf_cookies
+
+    # 过滤
+    cookies = filterCks(cookies, url, body)
+    print("待抢账号：", cookies)
 
     process_number = 8
     # 打乱数组
