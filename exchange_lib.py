@@ -157,7 +157,7 @@ def filterCks(cks, url, body):
     return buf_cks
 
 
-def exchange(process_id, cks, loop_times, url, body):
+def exchange(process_id, cks, loop_times, url, body, mask_dict):
     flag = False
     request_url = {
         'url': url,
@@ -174,13 +174,16 @@ def exchange(process_id, cks, loop_times, url, body):
         },
         'body': body,
     }
-    flag_arr = [True]*len(cks)
+
+    # flag_arr = [True]*len(cks)
     for t in range(loop_times):
+        # 每次loop的ua一样
+        request_url['headers']['User-Agent'] = userAgent()
         for i in range(len(cks)):
-            if not flag_arr[i]: continue
             ck = cks[i]
+            if not mask_dict[ck]: continue
             request_url['headers']['Cookie'] = ck
-            request_url['headers']['User-Agent'] = userAgent()
+            # request_url['headers']['User-Agent'] = userAgent()
             response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'], data=request_url['body'])
             result = response.json()
             msg(f"进程：{process_id}-执行次数：{t+1}/{loop_times}\n账号：{getUserName(ck)} {result['subCode'] + ' : ' + result['subCodeMsg'] if 'subCodeMsg' in result.keys() else result}")
@@ -193,10 +196,11 @@ def exchange(process_id, cks, loop_times, url, body):
                     # 直接停止该线程
                     flag = True
                     break
-                if result['subCode'] == 'A13' or result['subCode'] == 'A28': # 今日已领取；很抱歉没抢到
+                if result['subCode'] == 'A1' or result['subCode'] == 'A13' or result['subCode'] == 'A28': # 领取成功；今日已领取；很抱歉没抢到
                     # 停止该号
-                    flag_arr[i] = False
-                    msg(f"账号：{getUserName(ck)}：{result['subCodeMsg']}")
+                    # flag_arr[i] = False
+                    mask_dict[ck] = False
+                    msg(f"所有线程停止账号：{getUserName(ck)}")
 
         if flag:
             break
@@ -229,12 +233,18 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
         for x in getEnvs(os.environ['YANGYANG_EXCHANGE_CKS']):
             buf_cookies.append(cookies[int(x)])
         cookies = buf_cookies
-
+    
     # 过滤
     # cookies = filterCks(cookies, url, body)
     print("待抢账号：", "\n".join([getUserName(ck) for ck in cookies]))
 
     process_number = 8
+
+    # 进程共享数据
+    mask_dict = multiprocessing.Manager().dict()
+    for ck in cookies:
+        mask_dict[ck] = True
+
     # 打乱数组
     cookies_array = []
     for i in range(process_number):
@@ -245,19 +255,19 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
 
     nex_minute = (datetime.datetime.now() + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
     waiting_time = (nex_minute - datetime.datetime.now()).total_seconds()
-    loop_times = 15 // len(cookies) + 1
+    loop_times = 10 // len(cookies) + 1
 
     msg(f"等待{waiting_time}s")
 
     # waiting # 部署时需要去掉注释
-    time.sleep(max(waiting_time - 0.75, 0))
+    time.sleep(max(waiting_time - 0.22, 0))
 
     msg("Sub-process(es) start.")
     process_number = 8
     pool = multiprocessing.Pool(processes = process_number)
     for i in range(process_number):
         # random.shuffle(cookies)
-        pool.apply_async(exchange, (i+1, cookies_array[i], loop_times, url, body, ))
+        pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, url, body, mask_dict, ))
 
     pool.close()
     pool.join()
