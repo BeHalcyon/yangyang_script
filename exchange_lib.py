@@ -237,7 +237,7 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
     
     # 过滤
     # cookies = filterCks(cookies, url, body)
-    print("待抢账号：", "\n".join([getUserName(ck) for ck in cookies]))
+    print("待抢账号：\n", "\n".join([getUserName(ck) for ck in cookies]), '\n')
 
     process_number = 8
 
