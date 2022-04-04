@@ -10,8 +10,6 @@ import urllib3
 import multiprocessing
 import random
 import sqlite3 as sql
-import hashlib 
-
 
 def printT(s):
     print("[{0}]: {1}".format(datetime.datetime.now(), s), flush=True)
@@ -113,6 +111,13 @@ class msg(object):
                 printT("加载通知服务失败~")
         ###################
 
+import sqlite3 as sql
+import datetime
+import time
+
+def getUserName(name):
+    return name
+
 class SQLProcess:
 
     def __init__(self, table_name, database_name = "./filtered_cks.db"):
@@ -120,6 +125,7 @@ class SQLProcess:
         self.table_name = self.getTableName(table_name)
         self.createDatebase()
         self.createTable()
+        # self.deleteTableIfExpired()
     
     def getTableName(self, name):
         return 'table_' + name.replace('=', '').replace('%', '').replace('_', '').split("key")[-1][::10]
@@ -131,19 +137,33 @@ class SQLProcess:
         
     def createTable(self):
         self.c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name}
-                           (TIMESTAMP timestamp PRIMARY KEY NOT NULL, 
-                           USER_NAME TEXT NOT NULL, 
+                           (USER_NAME TEXT NOT NULL, 
+                           TIMESTAMP timestamp PRIMARY KEY NOT NULL, 
                            DATE TEXT NOT NULL, 
                            PRIORITY INT NOT NULL);
                            ''')
         
         self.conn.commit()
-        print(f"Table {self.table_name} has been created.")
+        print(f"Table {self.table_name} has been created...")
+    
+    def deleteTableIfExpired(self):
+        p = self.c.execute(f'''
+                        SELECT DATE from {self.table_name}
+                        ''')
+        res = self.c.fetchone()
+        if res is not None:
+            for item in p:
+                # table_date = res[0]
+                if item[0] != str(datetime.date.today()):
+                    print(f"Item {item} is filtered out...")
+                    self.deleteTable()
+                    self.createTable()
+                    return
 
     def deleteTable(self):
         self.c.execute(f"DROP TABLE {self.table_name};")
         self.conn.commit()
-        print(f"Table {self.table_name} has been deleted.")
+        print(f"Table {self.table_name} has been deleted...")
         
     def insertItem(self, user_name, timestamp, year_month_day, priority):
         if self.findUserName(user_name, year_month_day):
@@ -153,12 +173,9 @@ class SQLProcess:
         self.c.execute(f'''INSERT INTO {self.table_name} (USER_NAME, TIMESTAMP, DATE, PRIORITY)
                             VALUES ('{user_name}', {timestamp}, '{year_month_day}', {priority})''')
         self.conn.commit()
-        print(f"Item {getUserName(user_name)} has been inserted into Table {self.table_name}.")
+        print(f"Item {getUserName(user_name)} has been inserted into Table {self.table_name}...")
     
     def updateItem(self, user_name, timestamp, year_month_day, priority):
-        if not self.findUserName(user_name, year_month_day):
-            print(f"Error in updating: No item found...")
-            return
         self.c.execute(f'''
                         UPDATE {self.table_name} set 
                         TIMESTAMP={timestamp}, 
@@ -167,7 +184,7 @@ class SQLProcess:
                         WHERE USER_NAME='{user_name}' AND PRIORITY > -1 AND DATE = '{year_month_day}'
                         ''')
         self.conn.commit()
-        print(f"Item {getUserName(user_name)}:{priority} has been update in Table {self.table_name}.")
+        print(f"Item {getUserName(user_name)} has been update in Table {self.table_name}...")
     
     def filterUsers(self, user_number, year_month_day = str(datetime.date.today())):
         p = self.c.execute(f'''
@@ -176,23 +193,25 @@ class SQLProcess:
         res = [x[0] for x in p]
         return res[:min(len(res), user_number)]
     
+    def getItem(self, user_name):
+        if self.findUserName(user_name):
+            self.c.execute(f'''
+                        SELECT * from {self.table_name} WHERE USER_NAME = '{user_name}'
+                        ''')
+            return self.c.fetchone()
+        else:
+            return None
+    
     def findUserName(self, user_name, year_month_day = str(datetime.date.today())):
         p = self.c.execute(f'''
                         SELECT count(*) from {self.table_name} WHERE USER_NAME = '{user_name}' AND DATE = '{year_month_day}'
                         ''')
         return self.c.fetchone()[0] != 0
     
-    def printTodayItems(self):
-        self.printAllItems(str(datetime.date.today()))
-    
-    def printAllItems(self, year_month_day = None):
-        if year_month_day is None:
-            for item in self.c.execute(f"SELECT * FROM {self.table_name}"):
-                print(getUserName(item[1]), item[2], item[3])
-        else:
-            for item in self.c.execute(f"SELECT * FROM {self.table_name} WHERE DATE = '{year_month_day}'"):
-                print(getUserName(item[1]), item[2], item[3])
-        
+    def printAllItems(self, year_month_day = str(datetime.date.today())):
+        for item in self.c.execute(f"SELECT * FROM {self.table_name} WHERE DATE = '{year_month_day}'"):
+            print(getUserName(item[0]), item[1], item[2], item[3])
+            
     def getAllUsers(self, year_month_day = str(datetime.date.today())):
         res = []
         for item in self.c.execute(f"SELECT USER_NAME from {self.table_name} WHERE DATE = '{year_month_day}'"):
@@ -202,6 +221,7 @@ class SQLProcess:
     def close(self):
         self.conn.close()
     
+        
 
 def getUserName(cookie):
     try:
@@ -308,19 +328,25 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
 
     cookies = os.environ["JD_COOKIE"].split('&')
 
-    # 测试
-    # cookies = cookies[-7:]
+    all_cks_start, all_cks_end = 23, 23
+    
+    if 'YANGYANG_EXCHANGE_FULI_START_HOUR' in os.environ:
+        all_cks_start = getEnvs(os.environ['YANGYANG_EXCHANGE_FULI_START_HOUR'])
+    if 'YANGYANG_EXCHANGE_FULI_END_HOUR' in os.environ:
+        all_cks_end = getEnvs(os.environ['YANGYANG_EXCHANGE_FULI_END_HOUR'])
 
-    # 存入数据库
-    database = SQLProcess(body)
-    # 插入所有数据，如果存在则更新
-    for i, ck in enumerate(cookies):
-        database.insertItem(ck, time.time(), str(datetime.date.today()), len(cookies) - i)
+    cur_hours = datetime.datetime.now().hour
 
-    print('\n更新前数据库如下：')
-    database.printTodayItems()
-
-    cookies = database.filterUsers(4)
+    # 部署时清除
+    if not (all_cks_start <= cur_hours <= all_cks_end) and 'YANGYANG_EXCHANGE_CKS' in os.environ:
+        ck_ids = [int(x) for x in getEnvs(os.environ['YANGYANG_EXCHANGE_CKS'])]
+        buf_cookies = []
+        for x in getEnvs(os.environ['YANGYANG_EXCHANGE_CKS']):
+            buf_cookies.append(cookies[int(x)])
+        cookies = buf_cookies
+    
+    # 过滤
+    # cookies = filterCks(cookies, url, body)
     print("待抢账号：\n", "\n".join([getUserName(ck) for ck in cookies]), '\n')
 
     process_number = 8
@@ -356,15 +382,4 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
 
     pool.close()
     pool.join()
-
     msg("Sub-process(es) done.")
-
-    # 将为False的ck更新为负值
-    for ck, state in mask_dict.items():
-        if not state:
-            database.insertItem(ck, time.time(), str(datetime.date.today()), -1)
-
-    print('\n更新后数据库如下：')
-    database.printTodayItems()
-
-    database.close()

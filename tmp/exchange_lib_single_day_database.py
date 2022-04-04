@@ -120,6 +120,7 @@ class SQLProcess:
         self.table_name = self.getTableName(table_name)
         self.createDatebase()
         self.createTable()
+        self.deleteTableIfExpired()
     
     def getTableName(self, name):
         return 'table_' + name.replace('=', '').replace('%', '').replace('_', '').split("key")[-1][::10]
@@ -131,71 +132,84 @@ class SQLProcess:
         
     def createTable(self):
         self.c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name}
-                           (TIMESTAMP timestamp PRIMARY KEY NOT NULL, 
-                           USER_NAME TEXT NOT NULL, 
-                           DATE TEXT NOT NULL, 
+                           (USER_NAME TEXT PRIMARY KEY NOT NULL,
+                           TIMESTAMP timestamp NOT NULL,
+                           DATE TEXT NOT NULL,
                            PRIORITY INT NOT NULL);
                            ''')
         
         self.conn.commit()
-        print(f"Table {self.table_name} has been created.")
+        print(f"Table {self.table_name} has been created...")
+    
+    def deleteTableIfExpired(self):
+        p = self.c.execute(f'''
+                        SELECT DATE from {self.table_name}
+                        ''')
+        res = self.c.fetchone()
+        if res is not None:
+            for item in p:
+                # table_date = res[0]
+                if item[0] != str(datetime.date.today()):
+                    print(f"Item {item} is filtered out...")
+                    self.deleteTable()
+                    self.createTable()
+                    return
 
     def deleteTable(self):
         self.c.execute(f"DROP TABLE {self.table_name};")
         self.conn.commit()
-        print(f"Table {self.table_name} has been deleted.")
+        print(f"Table {self.table_name} has been deleted...")
         
     def insertItem(self, user_name, timestamp, year_month_day, priority):
-        if self.findUserName(user_name, year_month_day):
+        if self.findUserName(user_name):
             print(f"{getUserName(user_name)} is in Table {self.table_name}. Updating...")
             self.updateItem(user_name, timestamp, year_month_day, priority)
             return
         self.c.execute(f'''INSERT INTO {self.table_name} (USER_NAME, TIMESTAMP, DATE, PRIORITY)
                             VALUES ('{user_name}', {timestamp}, '{year_month_day}', {priority})''')
         self.conn.commit()
-        print(f"Item {getUserName(user_name)} has been inserted into Table {self.table_name}.")
+        print(f"Item {getUserName(user_name)} has been inserted into Table {self.table_name}...")
     
     def updateItem(self, user_name, timestamp, year_month_day, priority):
-        if not self.findUserName(user_name, year_month_day):
-            print(f"Error in updating: No item found...")
-            return
         self.c.execute(f'''
                         UPDATE {self.table_name} set 
                         TIMESTAMP={timestamp}, 
                         DATE='{year_month_day}',
                         PRIORITY={priority}
-                        WHERE USER_NAME='{user_name}' AND PRIORITY > -1 AND DATE = '{year_month_day}'
+                        WHERE USER_NAME='{user_name}' AND PRIORITY > -1
                         ''')
         self.conn.commit()
-        print(f"Item {getUserName(user_name)}:{priority} has been update in Table {self.table_name}.")
+        print(f"Item {getUserName(user_name)} has been update in Table {self.table_name}...")
     
-    def filterUsers(self, user_number, year_month_day = str(datetime.date.today())):
+    def filterUsers(self, user_number):
         p = self.c.execute(f'''
-                        SELECT USER_NAME FROM {self.table_name} WHERE PRIORITY > -1 AND DATE = '{year_month_day}' ORDER BY PRIORITY DESC;
+                        SELECT USER_NAME from {self.table_name} WHERE PRIORITY > -1 ORDER BY PRIORITY DESC;
                         ''')
         res = [x[0] for x in p]
         return res[:min(len(res), user_number)]
     
-    def findUserName(self, user_name, year_month_day = str(datetime.date.today())):
+    def getItem(self, user_name):
+        if self.findUserName(user_name):
+            self.c.execute(f'''
+                        SELECT * from {self.table_name} where USER_NAME = '{user_name}'
+                        ''')
+            return self.c.fetchone()
+        else:
+            return None
+    
+    def findUserName(self, user_name):
         p = self.c.execute(f'''
-                        SELECT count(*) from {self.table_name} WHERE USER_NAME = '{user_name}' AND DATE = '{year_month_day}'
+                        SELECT count(*) from {self.table_name} where USER_NAME = '{user_name}'
                         ''')
         return self.c.fetchone()[0] != 0
     
-    def printTodayItems(self):
-        self.printAllItems(str(datetime.date.today()))
-    
-    def printAllItems(self, year_month_day = None):
-        if year_month_day is None:
-            for item in self.c.execute(f"SELECT * FROM {self.table_name}"):
-                print(getUserName(item[1]), item[2], item[3])
-        else:
-            for item in self.c.execute(f"SELECT * FROM {self.table_name} WHERE DATE = '{year_month_day}'"):
-                print(getUserName(item[1]), item[2], item[3])
-        
-    def getAllUsers(self, year_month_day = str(datetime.date.today())):
+    def printAllItems(self):
+        for item in self.c.execute(f"SELECT * from {self.table_name}"):
+            print(getUserName(item[0]), item[1], item[2], item[3])
+            
+    def getAllUsers(self):
         res = []
-        for item in self.c.execute(f"SELECT USER_NAME from {self.table_name} WHERE DATE = '{year_month_day}'"):
+        for item in self.c.execute(f"SELECT USER_NAME from {self.table_name}"):
             res.append(item[0])
         return res
             
@@ -318,7 +332,7 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
         database.insertItem(ck, time.time(), str(datetime.date.today()), len(cookies) - i)
 
     print('\n更新前数据库如下：')
-    database.printTodayItems()
+    database.printAllItems()
 
     cookies = database.filterUsers(4)
     print("待抢账号：\n", "\n".join([getUserName(ck) for ck in cookies]), '\n')
@@ -365,6 +379,6 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
             database.insertItem(ck, time.time(), str(datetime.date.today()), -1)
 
     print('\n更新后数据库如下：')
-    database.printTodayItems()
+    database.printAllItems()
 
     database.close()
