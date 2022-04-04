@@ -10,8 +10,6 @@ import urllib3
 import multiprocessing
 import random
 import sqlite3 as sql
-import hashlib 
-
 
 def printT(s):
     print("[{0}]: {1}".format(datetime.datetime.now(), s), flush=True)
@@ -117,14 +115,11 @@ class SQLProcess:
 
     def __init__(self, table_name, database_name = "./filtered_cks.db"):
         self.database_name = database_name
-        self.table_name = self.getTableName(table_name)
+        self.table_name = table_name
         self.createDatebase()
         self.createTable()
         self.deleteTableIfExpired()
-    
-    def getTableName(self, name):
-        return 'table_' + name.replace('=', '').replace('%', '').replace('_', '').split("key")[-1][::10]
-    
+        
     def createDatebase(self):
         self.conn = sql.connect(self.database_name)
         self.c = self.conn.cursor()
@@ -162,13 +157,13 @@ class SQLProcess:
         
     def insertItem(self, user_name, timestamp, year_month_day, priority):
         if self.findUserName(user_name):
-            print(f"{getUserName(user_name)} is in Table {self.table_name}. Updating...")
+            print(f"{user_name} is in Table {self.table_name}. Updating...")
             self.updateItem(user_name, timestamp, year_month_day, priority)
             return
         self.c.execute(f'''INSERT INTO {self.table_name} (USER_NAME, TIMESTAMP, DATE, PRIORITY)
                             VALUES ('{user_name}', {timestamp}, '{year_month_day}', {priority})''')
         self.conn.commit()
-        print(f"Item {getUserName(user_name)} has been inserted into Table {self.table_name}...")
+        print(f"Item {user_name} has been inserted into Table {self.table_name}...")
     
     def updateItem(self, user_name, timestamp, year_month_day, priority):
         self.c.execute(f'''
@@ -179,7 +174,7 @@ class SQLProcess:
                         WHERE USER_NAME='{user_name}' AND PRIORITY > -1
                         ''')
         self.conn.commit()
-        print(f"Item {getUserName(user_name)} has been update in Table {self.table_name}...")
+        print(f"Item {user_name} has been update in Table {self.table_name}...")
     
     def filterUsers(self, user_number):
         p = self.c.execute(f'''
@@ -205,7 +200,7 @@ class SQLProcess:
     
     def printAllItems(self):
         for item in self.c.execute(f"SELECT * from {self.table_name}"):
-            print(getUserName(item[0]), item[1], item[2], item[3])
+            print(item)
             
     def getAllUsers(self):
         res = []
@@ -215,7 +210,7 @@ class SQLProcess:
             
     def close(self):
         self.conn.close()
-    
+        
 
 def getUserName(cookie):
     try:
@@ -322,19 +317,25 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
 
     cookies = os.environ["JD_COOKIE"].split('&')
 
-    # 测试
-    # cookies = cookies[-7:]
+    all_cks_start, all_cks_end = 23, 23
+    
+    if 'YANGYANG_EXCHANGE_FULI_START_HOUR' in os.environ:
+        all_cks_start = getEnvs(os.environ['YANGYANG_EXCHANGE_FULI_START_HOUR'])
+    if 'YANGYANG_EXCHANGE_FULI_END_HOUR' in os.environ:
+        all_cks_end = getEnvs(os.environ['YANGYANG_EXCHANGE_FULI_END_HOUR'])
 
-    # 存入数据库
-    database = SQLProcess(body)
-    # 插入所有数据，如果存在则更新
-    for i, ck in enumerate(cookies):
-        database.insertItem(ck, time.time(), str(datetime.date.today()), len(cookies) - i)
+    cur_hours = datetime.datetime.now().hour
 
-    print('\n更新前数据库如下：')
-    database.printAllItems()
-
-    cookies = database.filterUsers(4)
+    # 部署时清除
+    if not (all_cks_start <= cur_hours <= all_cks_end) and 'YANGYANG_EXCHANGE_CKS' in os.environ:
+        ck_ids = [int(x) for x in getEnvs(os.environ['YANGYANG_EXCHANGE_CKS'])]
+        buf_cookies = []
+        for x in getEnvs(os.environ['YANGYANG_EXCHANGE_CKS']):
+            buf_cookies.append(cookies[int(x)])
+        cookies = buf_cookies
+    
+    # 过滤
+    # cookies = filterCks(cookies, url, body)
     print("待抢账号：\n", "\n".join([getUserName(ck) for ck in cookies]), '\n')
 
     process_number = 8
@@ -370,15 +371,4 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
 
     pool.close()
     pool.join()
-
     msg("Sub-process(es) done.")
-
-    # 将为False的ck更新为负值
-    for ck, state in mask_dict.items():
-        if not state:
-            database.insertItem(ck, time.time(), str(datetime.date.today()), -1)
-
-    print('\n更新后数据库如下：')
-    database.printAllItems()
-
-    database.close()
