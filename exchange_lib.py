@@ -181,8 +181,6 @@ class SQLProcess:
                         WHERE USER_NAME='{user_name}' AND PRIORITY > 0 AND DATE = '{year_month_day}'
                         ''')
         self.conn.commit()
-        0 -> -1
-        -1 x X
         print(f"Item {getUserName(user_name)}:{priority} has been update in Table {self.table_name}.")
     
     def filterUsers(self, user_number, year_month_day = str(datetime.date.today())):
