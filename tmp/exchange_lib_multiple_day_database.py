@@ -130,13 +130,11 @@ class SQLProcess:
         return self.conn
         
     def createTable(self):
-        # 时间戳；ck；日期；优先级；权重（拟运行次数）
         self.c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name}
                            (TIMESTAMP timestamp PRIMARY KEY NOT NULL, 
                            USER_NAME TEXT NOT NULL, 
                            DATE TEXT NOT NULL, 
-                           PRIORITY INT NOT NULL,
-                           TIMES INT DEFAULT 0);
+                           PRIORITY INT NOT NULL);
                            ''')
         
         self.conn.commit()
@@ -157,18 +155,6 @@ class SQLProcess:
         self.conn.commit()
         print(f"Item {getUserName(user_name)} has been inserted into Table {self.table_name}.")
     
-    def addTimes(self, user_name, year_month_day = str(datetime.date.today())):
-        if not self.findUserName(user_name, year_month_day):
-            print(f"Error in updating: No item found...")
-            return
-        self.c.execute(f'''
-                        UPDATE {self.table_name} set 
-                        TIMES = TIMES + 1
-                        WHERE USER_NAME='{user_name}' AND PRIORITY > -1 AND DATE = '{year_month_day}'
-                        ''')
-        self.conn.commit()
-        print(f"Item {getUserName(user_name)}'s times have been added in Table {self.table_name}.")
-        
     def updateItem(self, user_name, timestamp, year_month_day, priority):
         if not self.findUserName(user_name, year_month_day):
             print(f"Error in updating: No item found...")
@@ -185,14 +171,10 @@ class SQLProcess:
     
     def filterUsers(self, user_number, year_month_day = str(datetime.date.today())):
         p = self.c.execute(f'''
-                        SELECT USER_NAME, TIMES FROM {self.table_name} WHERE PRIORITY > -1 AND DATE = '{year_month_day}' ORDER BY PRIORITY DESC;
+                        SELECT USER_NAME FROM {self.table_name} WHERE PRIORITY > -1 AND DATE = '{year_month_day}' ORDER BY PRIORITY DESC;
                         ''')
-        users, times = [], []
-        for x in p:
-            users.append(x[0])
-            times.append(x[1])
-        # users, times = [x[0] for x in p], [x[-1] for x in p]
-        return users[:min(len(users), user_number)], times[:min(len(times), user_number)]
+        res = [x[0] for x in p]
+        return res[:min(len(res), user_number)]
     
     def findUserName(self, user_name, year_month_day = str(datetime.date.today())):
         p = self.c.execute(f'''
@@ -205,13 +187,11 @@ class SQLProcess:
     
     def printAllItems(self, year_month_day = None):
         if year_month_day is None:
-            print(f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times")
             for item in self.c.execute(f"SELECT * FROM {self.table_name}"):
-                print(f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}")
+                print(getUserName(item[1]), item[2], item[3])
         else:
-            print(f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times")
             for item in self.c.execute(f"SELECT * FROM {self.table_name} WHERE DATE = '{year_month_day}'"):
-                print(f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}")
+                print(getUserName(item[1]), item[2], item[3])
         
     def getAllUsers(self, year_month_day = str(datetime.date.today())):
         res = []
@@ -344,18 +324,8 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
     print('\n更新前数据库如下：')
     database.printTodayItems()
 
-    cookies, visit_times = database.filterUsers(4)
-
-    # 将优先级最高的且权重最高的ck增加一次机会
-    if len(set(visit_times)) > 1:
-        max_times = max(visit_times)
-        for i in range(len(visit_times)):
-            if visit_times[i] == max_times:
-                cookies.append(cookies[i])
-                break
-    
-    print("\n待抢账号：")
-    print("\n".join([getUserName(ck) for ck in cookies]), '\n')
+    cookies = database.filterUsers(4)
+    print("待抢账号：\n", "\n".join([getUserName(ck) for ck in cookies]), '\n')
 
     process_number = 8
 
@@ -392,15 +362,11 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
     pool.join()
 
     msg("Sub-process(es) done.")
-    print()
 
     # 将为False的ck更新为负值
     for ck, state in mask_dict.items():
         if state <= 0:
             database.insertItem(ck, time.time(), str(datetime.date.today()), state)
-        else:
-            # 当前尚未抢到时，权重+1，state为0时说明火爆，不自增
-            database.addTimes(ck, str(datetime.date.today()))
         if state == -1:
             print(f"账号：{getUserName(ck)} 抢到优惠券")
 
