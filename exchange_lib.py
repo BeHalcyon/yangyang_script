@@ -164,7 +164,7 @@ class SQLProcess:
         self.c.execute(f'''
                         UPDATE {self.table_name} set 
                         TIMES = TIMES + 1
-                        WHERE USER_NAME='{user_name}' AND PRIORITY > -1 AND DATE = '{year_month_day}'
+                        WHERE USER_NAME='{user_name}' AND DATE = '{year_month_day}'
                         ''')
         self.conn.commit()
         print(f"Item {getUserName(user_name)}'s times have been added in Table {self.table_name}.")
