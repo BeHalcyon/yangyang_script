@@ -399,9 +399,9 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
     for ck, state in mask_dict.items():
         if state <= 0:
             database.insertItem(ck, time.time(), str(datetime.date.today()), state)
-        else:
+        # else:
             # 当前尚未抢到时，权重+1，state为0时说明火爆，不自增
-            database.addTimes(ck, str(datetime.date.today()))
+        database.addTimes(ck, str(datetime.date.today()))
         if state == -1:
             print(f"账号：{getUserName(ck)} 抢到优惠券")
 
