@@ -291,7 +291,7 @@ def exchange(process_id, cks, loop_times, url, body, mask_dict):
         request_url['headers']['User-Agent'] = userAgent()
         for i in range(len(cks)):
             ck = cks[i]
-            if mask_dict[ck] < 0: continue
+            if mask_dict[ck] <= 0: continue
             # if not mask_dict[ck]: continue
             request_url['headers']['Cookie'] = ck
             # request_url['headers']['User-Agent'] = userAgent()
@@ -313,8 +313,9 @@ def exchange(process_id, cks, loop_times, url, body, mask_dict):
                     # flag_arr[i] = False
                     mask_dict[ck] = -1
                     msg(f"所有进程停止账号：{getUserName(ck)}")
-                if result['subCode'] == 'A19': # 很抱歉没抢到
+                if result['subCode'] == 'A19' or result['subCode'] == 'A28': # 很抱歉没抢到
                     mask_dict[ck] = 0
+                    msg(f"所有进程停止账号：{getUserName(ck)}")
                     
 
         if flag:
