@@ -14,6 +14,7 @@ import time
 import re
 import json
 import random
+import os
 # import datatime
 
 now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -255,18 +256,40 @@ def push_qy(text):
     else:
         print("推送失败")
 
+
+def getEnvs(label):
+    try:
+        if label == 'True' or label == 'yes' or label == 'true' or label == 'Yes':
+            return True
+        elif label == 'False' or label == 'no' or label == 'false' or label == 'No':
+            return False
+    except:
+        pass
+    try:
+        if '.' in label:
+            return float(label)
+        elif '&' in label:
+            return label.split('&')
+        elif '@' in label:
+            return label.split('@')
+        else:
+            return int(label)
+    except:
+        return label
+
 def start():
 
-    # 用户名（格式为 13800138000,多用户用#隔开，例如13800138000#13800138000#13800138000）
-    user = "16638143970#18069864010#17682323970"
-    # 登录密码（用#隔开，例如123456#123456#123456）
-    passwd = "qweasd123#hxy104214#hxy104214"
-    # 要修改的步数，直接输入想要修改的步数值，留空为随机步数
-    step = "20000-40000"
-
-    user_list = user.split('#')
-    passwd_list = passwd.split('#')
-    setp_array = step.split('-')
+    if 'MI_SPORT_USERS' in os.environ and 'MI_SPORT_PASSWORD' in os.environ:
+        user_list = getEnvs(os.environ['MI_SPORT_USERS'])
+        passwd_list = getEnvs(os.environ['MI_SPORT_PASSWORD'])
+    else:
+        print("环境变量未配置！")
+        exit()
+    
+    if 'MI_SPORT_STEP' in os.environ:
+        setp_array = getEnvs(os.environ['MI_SPORT_STEP'])
+    else:
+        setp_array = ['20000', '40000']
 
     if len(user_list) == len(passwd_list):
         push = ''
@@ -277,12 +300,15 @@ def start():
                     int(setp_array[0]), int(setp_array[1])))
             elif str(step) == '0':
                 step = ''
-            push += main(user_list[line], passwd_list[line], step) + '\n'
+            # push += main(user_list[line], passwd_list[line], step) + '\n'
             desp += '账号{}：{} 步数：{}\n'.format(line+1, user_list[line], step)
         try:
             # push_qy(push)
             desp += "============================="
-            push_tg(token='5287701905:AAFMlA63YXZ00ld0Viw88Fa2mbIMraBVlho', chat_id='2057868168', desp=desp)
+            if 'TG_BOT_TOKEN' in os.environ and 'TG_USER_ID' in os.environ:
+                push_tg(token=getEnvs(os.environ['TG_BOT_TOKEN']), chat_id=str(getEnvs(os.environ['TG_USER_ID'])), desp=desp)
+            else:
+                print("TG推送未配置或失效，请检查！")
         except:
             print('推送出错')
 
