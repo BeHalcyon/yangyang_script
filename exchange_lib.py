@@ -303,7 +303,8 @@ def exchange(process_id, cks, loop_times, url, body, mask_dict):
             #     flag = True
             #     break
             if 'subCode' in result.keys():
-                if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
+                # if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
+                if result['subCode'] == 'D2' or result['subCode'] == 'A14': # 当前时间段抢空；今日没了；
                     # 直接停止该线程
                     msg("停止所有进程...")
                     flag = True
