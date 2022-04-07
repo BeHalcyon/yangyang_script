@@ -9,8 +9,7 @@ import threading
 import urllib3
 import multiprocessing
 import random
-import sqlite3 as sqlite
-import mysql.connector as mysql
+import sqlite3 as sql
 import hashlib 
 
 
@@ -116,63 +115,28 @@ class msg(object):
 
 class SQLProcess:
 
-    def __init__(self, table_name, database_dict = {
-                                                    'type': 'sqlite',
-                                                    'name': "filtered_cks.db"
-                                                   }):
-        self.database_dict = database_dict
+    def __init__(self, table_name, database_name = "./filtered_cks.db"):
+        self.database_name = database_name
         self.table_name = self.getTableName(table_name)
-        print(self.table_name)
         self.createDatebase()
         self.createTable()
     
     def getTableName(self, name):
         return 'table_' + name.replace('=', '').replace('%', '').replace('_', '').split("key")[-1][::10]
     
-    def deleteTable(self):
-        self.c.execute(f'''
-                        DROP TABLE IF EXISTS {self.table_name}
-                        ''')
-        self.conn.commit()
-    
     def createDatebase(self):
-        if 'type' not in self.database_dict:
-            print("Error in database configure! Exit...")
-            exit()
-        
-        if self.database_dict['type'] == 'mysql':
-            try:
-                start = time.time()
-                self.conn = mysql.connect(
-                    host = self.database_dict['host'],       # 数据库主机地址
-                    port = self.database_dict['port'],
-                    user = self.database_dict['user'],    # 数据库用户名
-                    passwd = self.database_dict['passwd'],   # 数据库密码
-                    database = self.database_dict['database']
-                )
-                end = time.time()
-                # 两秒超时
-                if end - start > 2:
-                    raise Exception
-                print("Connected to remote mysql successfully...")
-            except Exception as e:
-                print("Try to connecting to remote mysql but timeout occurs...", e)
-                self.conn = sqlite.connect("filtered_cks.db")
-                print("Connected to local sqlite successfully...")
-        else:
-            self.conn = sqlite.connect("filtered_cks.db")
-            print("Connected to local sqlite successfully...")
+        self.conn = sql.connect(self.database_name)
         self.c = self.conn.cursor()
         return self.conn
         
     def createTable(self):
         # 时间戳；ck；日期；优先级；权重（拟运行次数）
         self.c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name}
-                           (TIMESTAMP REAL PRIMARY KEY NOT NULL, 
+                           (TIMESTAMP timestamp PRIMARY KEY NOT NULL, 
                            USER_NAME TEXT NOT NULL, 
                            DATE TEXT NOT NULL, 
                            PRIORITY INT NOT NULL,
-                           TIMES INT NOT NULL DEFAULT 0);
+                           TIMES INT DEFAULT 0);
                            ''')
         
         self.conn.commit()
@@ -192,7 +156,7 @@ class SQLProcess:
                             VALUES ('{user_name}', {timestamp}, '{year_month_day}', {priority})''')
         self.conn.commit()
         print(f"Item {getUserName(user_name)} has been inserted into Table {self.table_name}.")
-
+    
     def addTimes(self, user_name, year_month_day = str(datetime.date.today())):
         if not self.findUserName(user_name, year_month_day):
             print(f"Error in updating: No item found...")
@@ -220,10 +184,9 @@ class SQLProcess:
         print(f"Item {getUserName(user_name)}:{priority} has been update in Table {self.table_name}.")
     
     def filterUsers(self, user_number, year_month_day = str(datetime.date.today())):
-        self.c.execute(f'''
+        p = self.c.execute(f'''
                         SELECT USER_NAME, TIMES FROM {self.table_name} WHERE PRIORITY > -1 AND DATE = '{year_month_day}' ORDER BY PRIORITY DESC;
                         ''')
-        p = self.c.fetchall()
         users, times = [], []
         for x in p:
             users.append(x[0])
@@ -243,13 +206,11 @@ class SQLProcess:
     def printAllItems(self, year_month_day = None):
         if year_month_day is None:
             print(f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times")
-            self.c.execute(f"SELECT * FROM {self.table_name}")
-            for item in self.c.fetchall():
+            for item in self.c.execute(f"SELECT * FROM {self.table_name}"):
                 print(f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}")
         else:
             print(f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times")
-            self.c.execute(f"SELECT * FROM {self.table_name} WHERE DATE = '{year_month_day}'")
-            for item in self.c.fetchall():
+            for item in self.c.execute(f"SELECT * FROM {self.table_name} WHERE DATE = '{year_month_day}'"):
                 print(f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}")
         
     def getAllUsers(self, year_month_day = str(datetime.date.today())):
@@ -363,8 +324,6 @@ def exchange(process_id, cks, loop_times, url, body, mask_dict):
 
 def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body='None'):
 
-    debug_flag = False
-
     requests.packages.urllib3.disable_warnings()
 
     pwd = os.path.dirname(os.path.abspath(__file__)) + os.sep
@@ -378,35 +337,11 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
     # 测试
     # cookies = cookies[-7:]
 
-    if 'DATABASE_TYPE' in os.environ and \
-        'DATABASE_HOST' in os.environ and \
-        'DATABASE_PORT' in os.environ and \
-        'DATABASE_USER' in os.environ and \
-        'DATABASE_PASSWD' in os.environ and \
-        'DATABASE_DATABASE' in os.environ:
-        database_dict = {
-                    "type":     os.environ['DATABASE_TYPE'],
-                    "host":     os.environ['DATABASE_HOST'],       # 数据库主机地址
-                    "port":     os.environ['DATABASE_PORT'],
-                    "user":     os.environ['DATABASE_USER'],    # 数据库用户名
-                    "passwd":   os.environ['DATABASE_PASSWD'],   # 数据库密码
-                    "database": os.environ['DATABASE_DATABASE']
-                }
-    else:
-        database_dict = {
-                    'type': 'sqlite',
-                    'name': "filtered_cks.db"
-                }
-
     # 存入数据库
-    database = SQLProcess(body, database_dict)
+    database = SQLProcess(body)
     # 插入所有数据，如果存在则更新
-    insert_start = time.time()
     for i, ck in enumerate(cookies):
         database.insertItem(ck, time.time(), str(datetime.date.today()), len(cookies) - i)
-    insert_end = time.time()
-    print("\n插入/更新数据库操作耗时为：{:.2f}s\n".format(insert_end - insert_start))
-
 
     print('\n更新前数据库如下：')
     database.printTodayItems()
@@ -443,24 +378,22 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
     waiting_time = (nex_minute - datetime.datetime.now()).total_seconds()
     loop_times = 10 // len(cookies) + 1
 
-    if not debug_flag:
-        msg(f"等待{waiting_time}s")
+    msg(f"等待{waiting_time}s")
 
-        # waiting # 部署时需要去掉注释
-        time.sleep(max(waiting_time - 0.22, 0))
+    # waiting # 部署时需要去掉注释
+    time.sleep(max(waiting_time - 0.22, 0))
 
-        msg("Sub-process(es) start.")
-        process_number = 8
-        pool = multiprocessing.Pool(processes = process_number)
-        for i in range(process_number):
-            # random.shuffle(cookies)
-            pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, url, body, mask_dict, ))
+    msg("Sub-process(es) start.")
+    process_number = 8
+    pool = multiprocessing.Pool(processes = process_number)
+    for i in range(process_number):
+        # random.shuffle(cookies)
+        pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, url, body, mask_dict, ))
 
-        pool.close()
-        pool.join()
+    pool.close()
+    pool.join()
 
-        msg("Sub-process(es) done.")
-
+    msg("Sub-process(es) done.")
     print()
 
     # 将为False的ck更新为负值

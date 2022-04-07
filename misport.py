@@ -5,7 +5,7 @@
 Author: yangyang
 功能：
 Date: 2022-3-21
-cron: 0 18 12 * * *
+cron: 0 17 12 * * *
 new Env("小米运动");
 '''
 
