@@ -300,7 +300,7 @@ def start():
                     int(setp_array[0]), int(setp_array[1])))
             elif str(step) == '0':
                 step = ''
-            # push += main(user_list[line], passwd_list[line], step) + '\n'
+            push += main(user_list[line], passwd_list[line], step) + '\n'
             desp += '账号{}：{} 步数：{}\n'.format(line+1, user_list[line], step)
         try:
             # push_qy(push)
