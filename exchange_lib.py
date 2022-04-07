@@ -209,15 +209,19 @@ class SQLProcess:
         if not self.findUserName(user_name, year_month_day):
             print(f"Error in updating: No item found...")
             return
+        if priority > 0:
+            print(f"Item {getUserName(user_name)}:{priority} is not updated because it only supports decrease.")
+            return
+
+        # 时间戳为primary key，不更新
         self.c.execute(f'''
                         UPDATE {self.table_name} set 
-                        TIMESTAMP={timestamp}, 
                         DATE='{year_month_day}',
                         PRIORITY={priority}
                         WHERE USER_NAME='{user_name}' AND PRIORITY > 0 AND DATE = '{year_month_day}'
                         ''')
         self.conn.commit()
-        print(f"Item {getUserName(user_name)}:{priority} has been update in Table {self.table_name}.")
+        print(f"Item {getUserName(user_name)}:{priority} has been updated in Table {self.table_name}.")
     
     def filterUsers(self, user_number, year_month_day = str(datetime.date.today())):
         self.c.execute(f'''
