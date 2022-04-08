@@ -55,7 +55,7 @@ def userAgent():
         random.sample ('0987654321ABCDEF', 4)) + '-' + ''.join (
         random.sample ('0987654321ABCDEF', 4)) + '-' + ''.join (random.sample ('0987654321ABCDEF', 12))
     return f'jdapp;iPhone;10.0.4;{iosVer};{uuid};network/wifi;ADID/{ADID};supportApplePay/0;hasUPPay/0;hasOCPay/0;model/iPhone{iPhone},1;addressid/{addressid};supportBestPay/0;appBuild/167629;jdSupportDarkMode/0;Mozilla/5.0 (iPhone; CPU iPhone OS {iosV} like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1'
- 
+
 
 ## 获取通知服务
 class msg(object):
@@ -365,7 +365,7 @@ def exchange(process_id, cks, loop_times, url, body, mask_dict):
         if flag:
             break
 
-def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body='None'):
+def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body='None', batch_size=4):
 
     debug_flag = False
 
@@ -415,7 +415,8 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
     print('\n更新前数据库如下：')
     database.printTodayItems()
 
-    cookies, visit_times = database.filterUsers(4)
+    # 可修订仓库batch size
+    cookies, visit_times = database.filterUsers(batch_size)
 
     # 将优先级最高的且权重最高的ck增加一次机会
     if len(set(visit_times)) > 1:
