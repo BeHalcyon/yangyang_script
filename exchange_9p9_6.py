@@ -5,7 +5,7 @@
 Author: yangyang
 功能：
 Date: 2022-4-8
-cron: 30 59 10 * * *
+cron: 30 59 9 * * *
 new Env("极速版9.9减6(python)");
 '''
 
