@@ -85,7 +85,7 @@ let args_xh = {
      * 提示：想每个账号独立不同的试用产品的，请设置为false，想减少脚本运行时间的，请设置为true
      * 默认为false
      */
-    unified: process.env.JD_TRY_UNIFIED === 'true' || true,
+    unified: process.env.JD_TRY_UNIFIED === 'true' || false,
     //以上环境变量新增于2022.01.25
     /*
      * 商品原价，低于这个价格都不会试用，意思是
@@ -502,8 +502,8 @@ function try_apply(title, activityId) {
             "activityId": activityId,
             "previewTime": ""
         });
-        // let option = taskurl_xh('newtry', 'try_apply', body)
-        let option = taskurl_try('newtry', 'try_apply', activityId, body)
+        let option = taskurl_xh('newtry', 'try_apply', body)
+        // let option = taskurl_try('newtry', 'try_apply', activityId, body)
         $.get(option, (err, resp, data) => {
             try{
                 if(err){
@@ -612,27 +612,7 @@ function try_MyTrials(page, selected) {
     })
 }
 
-
 function taskurl_xh(appid, functionId, body = JSON.stringify({})) {
-    return {
-        "url": `${URL}?appid=${appid}&functionId=${functionId}&clientVersion=10.4.6&client=wh5&body=${encodeURIComponent(body)}`,
-        'headers': {
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Encoding": "gzip, deflate",
-            "Accept-Language": "zh-CN,zh",
-            // "Connection": "keep-alive",
-            "Content-Type": "application/x-www-form-urlencoded",
-            'origin': 'https://pro.m.jd.com',
-            "Referer": `https://prodev.m.jd.com/mall/active/G7sQ92vWSBsTHzk4e953qUGWQJ4/index.html`,
-            "Cookie": $.cookie,
-            "UserAgent": "jdapp;android;10.4.6;;;appBuild/95105;ef/1;ep/%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22%2C%22ts%22%3A1649486773010%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22sv%22%3A%22EG%3D%3D%22%2C%22ad%22%3A%22CzUmCzvsYzSnCtYzDNq0ZG%3D%3D%22%2C%22od%22%3A%22YtLwCzc0DQG3ZNOzEQS2Zq%3D%3D%22%2C%22ov%22%3A%22Ctq%3D%22%2C%22ud%22%3A%22ENY1DNGnCNC1DNC0EJY4BJHtDNvvC2Y1DNUzCm%3D%3D%22%7D%2C%22ciphertype%22%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D;jdSupportDarkMode/0;Mozilla/5.0 (Linux; Android 9; MI 6 Build/PKQ1.190118.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36"
-            // "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
-        }
-    }
-}
-
-
-function taskurl_xh_old(appid, functionId, body = JSON.stringify({})) {
     return {
         "url": `${URL}?appid=${appid}&functionId=${functionId}&clientVersion=10.3.4&client=wh5&body=${encodeURIComponent(body)}`,
         'headers': {
@@ -662,7 +642,7 @@ function taskurl_try(appid, functionId, activityId, body = JSON.stringify({})) {
             "Content-Type": "application/x-www-form-urlencoded",
             'origin': 'https://pro.m.jd.com',
             "Referer": `https://pro.m.jd.com/mall/active/3mpGVQDhvLsMvKfZZumWPQyWt83L/index.html?activityId=${activityId}`,
-            "Cookie": $.cookie,
+            "Cookie": cookie,
             "UserAgent": "jdapp;android;10.4.6;;;appBuild/95105;ef/1;ep/%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22%2C%22ts%22%3A1649486773010%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22sv%22%3A%22EG%3D%3D%22%2C%22ad%22%3A%22CzUmCzvsYzSnCtYzDNq0ZG%3D%3D%22%2C%22od%22%3A%22YtLwCzc0DQG3ZNOzEQS2Zq%3D%3D%22%2C%22ov%22%3A%22Ctq%3D%22%2C%22ud%22%3A%22ENY1DNGnCNC1DNC0EJY4BJHtDNvvC2Y1DNUzCm%3D%3D%22%7D%2C%22ciphertype%22%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D;jdSupportDarkMode/0;Mozilla/5.0 (Linux; Android 9; MI 6 Build/PKQ1.190118.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36"
             // "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
         }
