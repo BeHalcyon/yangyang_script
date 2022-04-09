@@ -85,7 +85,7 @@ let args_xh = {
      * 提示：想每个账号独立不同的试用产品的，请设置为false，想减少脚本运行时间的，请设置为true
      * 默认为false
      */
-    unified: process.env.JD_TRY_UNIFIED === 'true' || true,
+    unified: process.env.JD_TRY_UNIFIED === 'true' || false,
     //以上环境变量新增于2022.01.25
     /*
      * 商品原价，低于这个价格都不会试用，意思是
