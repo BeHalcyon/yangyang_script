@@ -310,33 +310,35 @@ def filterCks(cks, url, body):
     return buf_cks
 
 
-def exchange(process_id, cks, loop_times, url, body, mask_dict):
+def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
     flag = False
-    request_url = {
-        'url': url,
-        'headers': {
-            "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "zh-cn",
-            "Connection": "keep-alive",
-            "Content-Type": "application/x-www-form-urlencoded",
-            'origin': 'https://pro.m.jd.com',
-            "Referer": "https://pro.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?lng=106.476617&lat=29.502674&sid=fbc43764317f538b90e0f9ab43c8285w&un_area=4_50952_106_0",
-            "Cookie": "None",
-            "User-Agent": userAgent(),
-        },
-        'body': body,
-    }
+    # request_url = {
+    #     'url': url,
+    #     'headers': {
+    #         "Accept": "*/*",
+    #         "Accept-Encoding": "gzip, deflate, br",
+    #         "Accept-Language": "zh-cn",
+    #         "Connection": "keep-alive",
+    #         "Content-Type": "application/x-www-form-urlencoded",
+    #         'origin': 'https://pro.m.jd.com',
+    #         "Referer": "https://pro.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?lng=106.476617&lat=29.502674&sid=fbc43764317f538b90e0f9ab43c8285w&un_area=4_50952_106_0",
+    #         "Cookie": "None",
+    #         "User-Agent": userAgent(),
+    #     },
+    #     'body': body,
+    # }
 
     # flag_arr = [True]*len(cks)
     for t in range(loop_times):
         # 每次loop的ua一样
-        request_url['headers']['User-Agent'] = userAgent()
+        
+        # request_url['headers']['User-Agent'] = userAgent()
         for i in range(len(cks)):
             ck = cks[i]
+            request_url = request_url_dict[ck]
             if mask_dict[ck] <= 0: continue
             # if not mask_dict[ck]: continue
-            request_url['headers']['Cookie'] = ck
+            # request_url['headers']['Cookie'] = ck
             # request_url['headers']['User-Agent'] = userAgent()
             response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'], data=request_url['body'])
             result = response.json()
@@ -418,6 +420,25 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
     # 可修订仓库batch size
     cookies, visit_times = database.filterUsers(batch_size)
 
+    # 每个账户的请求头及UA固定
+    request_url_dict = {}
+    for ck in cookies:
+        request_url_dict[ck] = {
+            'url': url,
+            'headers': {
+                "Accept": "*/*",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Accept-Language": "zh-cn",
+                "Connection": "keep-alive",
+                "Content-Type": "application/x-www-form-urlencoded",
+                'origin': 'https://pro.m.jd.com',
+                "Referer": "https://pro.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?lng=106.476617&lat=29.502674&sid=fbc43764317f538b90e0f9ab43c8285w&un_area=4_50952_106_0",
+                "Cookie": ck,
+                "User-Agent": userAgent(),
+            },
+            'body': body,
+        }
+
     # 将优先级最高的且权重最高的ck增加一次机会
     if len(set(visit_times)) > 1:
         max_times = max(visit_times)
@@ -459,7 +480,7 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
         pool = multiprocessing.Pool(processes = process_number)
         for i in range(process_number):
             # random.shuffle(cookies)
-            pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, url, body, mask_dict, ))
+            pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict, mask_dict, ))
 
         pool.close()
         pool.join()
