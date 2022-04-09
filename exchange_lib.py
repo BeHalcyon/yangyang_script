@@ -349,12 +349,12 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
             #     break
             if 'subCode' in result.keys():
                 # if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
-                if result['subCode'] == 'D2' or result['subCode'] == 'A14': # 当前时间段抢空；今日没了；
+                if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A15': # 当前时间段抢空；今日没了；
                     # 直接停止该线程
                     msg("停止所有进程...")
                     flag = True
                     break
-                if result['subCode'] == 'A1' or result['subCode'] == 'A13': # 领取成功；今日已领取；很抱歉没抢到
+                if result['subCode'] == 'A1' or result['subCode'] == 'A13': # 领取成功；今日已领取；
                     # 停止该号
                     # flag_arr[i] = False
                     mask_dict[ck] = -1
