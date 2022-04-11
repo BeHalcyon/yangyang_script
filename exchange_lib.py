@@ -13,7 +13,6 @@ import sqlite3 as sqlite
 import mysql.connector as mysql
 import hashlib 
 
-
 def printT(s):
     print("[{0}]: {1}".format(datetime.datetime.now(), s), flush=True)
     sys.stdout.flush()
@@ -349,7 +348,7 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
             #     break
             if 'subCode' in result.keys():
                 # if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
-                if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A15': # 当前时间段抢空；今日没了；
+                if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A15' or result['subCode'] == 'A6': # 当前时间段抢空；今日没了；；活动结束了
                     # 直接停止该线程
                     msg("停止所有进程...")
                     flag = True
