@@ -208,19 +208,44 @@ class SQLProcess:
         if not self.findUserName(user_name, year_month_day):
             print(f"Error in updating: No item found...")
             return
+        # 时间戳为primary key，不更新，ck动态更新，因为会失效
+        # 优先级大于0时可以更新，但只更新权重
         if priority > 0:
-            print(f"Item {getUserName(user_name)}:{priority} is not updated because it only supports decrease.")
-            return
+            self.c.execute(f'''
+                            UPDATE {self.table_name} SET 
+                            USER_NAME='{user_name}',
+                            DATE='{year_month_day}'
+                            WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                            ''')
+            print(f"Item {getUserName(user_name)} has been updated for USER_NAME (with cookie). The weight is not updated.")
+        else:
+            # 小于或者等于0时全部更新
+            self.c.execute(f'''
+                            UPDATE {self.table_name} SET 
+                            USER_NAME='{user_name}',
+                            DATE='{year_month_day}',
+                            PRIORITY={priority}
+                            WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                            ''')
+            print(f"Item {getUserName(user_name)}:{priority} has been updated in Table {self.table_name}.")
 
-        # 时间戳为primary key，不更新
-        self.c.execute(f'''
-                        UPDATE {self.table_name} set 
-                        DATE='{year_month_day}',
-                        PRIORITY={priority}
-                        WHERE USER_NAME='{user_name}' AND PRIORITY > 0 AND DATE = '{year_month_day}'
-                        ''')
+        
+        # self.c.execute(f'''
+        #                 UPDATE {self.table_name} set 
+        #                 DATE='{year_month_day}',
+        #                 PRIORITY={priority}
+        #                 WHERE USER_NAME='{user_name}' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+        #                 ''')
+        #                 # UPDATE `table_3BA136F305ndD8D2eCF4C5AAE137` SET `USER_NAME` = 'pt_key=AAJiO0ZNADCcx_Fo6iKiAYKQQJA6D3swaJZSikd0kOGQ4R1Ka6qqkL0pYnpEs55BSOAzSbjNZWc;pt_pin=hxy287908634;' WHERE `USER_NAME` LIKE '%hxy%' and `DATE` = '2022-04-11'
+        # self.c.execute(f'''
+        #                 UPDATE {self.table_name} SET 
+        #                 USER_NAME='{user_name}',
+        #                 DATE='{year_month_day}',
+        #                 PRIORITY={priority}
+        #                 WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+        #                ''')
         self.conn.commit()
-        print(f"Item {getUserName(user_name)}:{priority} has been updated in Table {self.table_name}.")
+        # print(f"Item {getUserName(user_name)}:{priority} has been updated in Table {self.table_name}.")
     
     def filterUsers(self, user_number, year_month_day = str(datetime.date.today())):
         self.c.execute(f'''
