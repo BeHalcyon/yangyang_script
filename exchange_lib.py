@@ -497,7 +497,7 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
         msg(f"等待{waiting_time}s")
 
         # waiting # 部署时需要去掉注释
-        time.sleep(max(waiting_time - 0.22, 0))
+        time.sleep(max(waiting_time - 0.3, 0))
 
         msg("Sub-process(es) start.")
         process_number = 8
