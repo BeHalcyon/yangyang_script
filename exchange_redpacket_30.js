@@ -1,7 +1,7 @@
 /*
 2021.03.16 京东邀新提红30 [exchange_redpacket_30.js]
 静态监控 --> 动态监控
-cron:0 1 0,12 * * *
+cron:45 1,4 10 * * *
  */
 
 function exchangeRedPacket() {
@@ -131,7 +131,7 @@ console.log("总循环次数为", randomCount * cookiesArr.length);
 
 if (!cookiesArr[0]) {
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', { "open-url": "https://bean.m.jd.com/bean/signIndex.action" });
-    return;
+    exit();
 }
 
 // let url_header = "https://api.m.jd.com/client.action?functionId=withdrawRedPocket&client=wh5&clientVersion=1.0.0&uuid=865441035434968-4c49e3f54533"
