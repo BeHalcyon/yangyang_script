@@ -1,8 +1,9 @@
 /*
 2021.03.16 京东邀新提红30 [exchange_redpacket_30.js]
 静态监控 --> 动态监控
-cron:45 1,4 10 * * *
- */
+cron:45 0-59/10 0-2,10-14 * * *
+*/
+
 
 function exchangeRedPacket() {
     !(async () => {
@@ -125,7 +126,7 @@ ck_str_items.forEach(item => {
 cookiesArr = buf_cookiesArr;
 
 // 循环次数
-let randomCount = 5;
+let randomCount = 2;
 console.log("循环次数为", randomCount);
 console.log("总循环次数为", randomCount * cookiesArr.length);
 
