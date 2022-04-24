@@ -203,7 +203,7 @@ class SQLProcess:
                         ''')
         self.conn.commit()
         print(f"Item {getUserName(user_name)}'s times have been added in Table {self.table_name}.")
-        
+    
     def updateItem(self, user_name, timestamp, year_month_day, priority):
         if not self.findUserName(user_name, year_month_day):
             print(f"Error in updating: No item found...")
@@ -228,6 +228,61 @@ class SQLProcess:
                             WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
                             ''')
             print(f"Item {getUserName(user_name)}:{priority} has been updated in Table {self.table_name}.")
+        self.conn.commit()
+
+    def updateItem_ALLCK(self, user_name, timestamp, year_month_day, priority):
+        if not self.findUserName(user_name, year_month_day):
+            print(f"Error in updating: No item found...")
+            return
+
+        # 只将数值更新为权重比较高的值和权重小于或等于0的值。
+        self.c.execute(f'''
+                        SELECT PRIORITY FROM {self.table_name} 
+                        WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                        ''')
+        old_priority = int(self.c.fetchone()[0])
+        # 更新权重条件：1. 当前权重大于0（未领到券且当前账号不火爆）；2. 在1的基础上，需要更新的权重小于等于0（抢到券或火爆）或权重大于旧权重（更新为更高的权重）
+        if old_priority > 0 and (old_priority < priority or priority <= 0):
+        # if self.c.fetchone()[0] < priority or priority <= 0:
+            self.c.execute(f'''
+                            UPDATE {self.table_name} SET 
+                            USER_NAME='{user_name}',
+                            DATE='{year_month_day}',
+                            PRIORITY={priority}
+                            WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                            ''')
+            print(f"Item {getUserName(user_name)}:{priority} has been updated in Table {self.table_name}.")
+        else:
+            # 权重更小，且权重大于0，则不更新权重，只更新数值。
+            self.c.execute(f'''
+                UPDATE {self.table_name} SET 
+                USER_NAME='{user_name}',
+                DATE='{year_month_day}'
+                WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                ''')
+            print(f"Item {getUserName(user_name)} has been updated for USER_NAME (with cookie). The weight is not updated.")
+
+        # # 时间戳为primary key，不更新，ck动态更新，因为会失效
+        # # 优先级大于0时可以更新，但只更新ck
+        # if priority > 0:
+        #     self.c.execute(f'''
+        #                     UPDATE {self.table_name} SET 
+        #                     USER_NAME='{user_name}',
+        #                     DATE='{year_month_day}'
+        #                     WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+        #                     ''')
+
+        #     print(f"Item {getUserName(user_name)} has been updated for USER_NAME (with cookie). The weight is not updated.")
+        # else:
+        #     # 小于或者等于0时全部更新
+        #     self.c.execute(f'''
+        #                     UPDATE {self.table_name} SET 
+        #                     USER_NAME='{user_name}',
+        #                     DATE='{year_month_day}',
+        #                     PRIORITY={priority}
+        #                     WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+        #                     ''')
+        #     print(f"Item {getUserName(user_name)}:{priority} has been updated in Table {self.table_name}.")
 
         
         # self.c.execute(f'''
@@ -391,7 +446,7 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
         if flag:
             break
 
-def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body='None', batch_size=4):
+def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body='None', batch_size=5):
 
     debug_flag = False
 
@@ -416,10 +471,10 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
         'DATABASE_DATABASE' in os.environ:
         database_dict = {
                     "type":     os.environ['DATABASE_TYPE'],
-                    "host":     os.environ['DATABASE_HOST'],       # 数据库主机地址
+                    "host":     os.environ['DATABASE_HOST'],        # 数据库主机地址
                     "port":     os.environ['DATABASE_PORT'],
-                    "user":     os.environ['DATABASE_USER'],    # 数据库用户名
-                    "passwd":   os.environ['DATABASE_PASSWD'],   # 数据库密码
+                    "user":     os.environ['DATABASE_USER'],        # 数据库用户名
+                    "passwd":   os.environ['DATABASE_PASSWD'],      # 数据库密码
                     "database": os.environ['DATABASE_DATABASE']
                 }
     else:
