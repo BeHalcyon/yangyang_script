@@ -126,7 +126,9 @@ class SQLProcess:
         self.createTable()
     
     def getTableName(self, name):
-        return 'table_' + name.replace('=', '').replace('%', '').replace('_', '').split("key")[-1][::10]
+        # temp = 'table_' + name.replace('=', '').replace('%', '').replace('_', '').split("key")[-1][::10]
+        temp = 'table_' + name.replace('=', '').replace('%', '').replace('_', '').replace('.', '')[::10]
+        return temp if len(temp) <= 20 else temp[:20]
     
     def deleteTable(self):
         self.c.execute(f'''
@@ -446,7 +448,7 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
         if flag:
             break
 
-def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body='None', batch_size=5):
+def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body='None', batch_size=5, waiting_delta=0.3):
 
     debug_flag = False
 
@@ -552,7 +554,7 @@ def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newB
         msg(f"等待{waiting_time}s")
 
         # waiting # 部署时需要去掉注释
-        time.sleep(max(waiting_time - 0.3, 0))
+        time.sleep(max(waiting_time - waiting_delta, 0))
 
         msg("Sub-process(es) start.")
         process_number = 8
