@@ -1,0 +1,37 @@
+POST /client.action?functionId=lite_newBabelAwardCollection h2
+Host: api.m.jd.com
+content-length: 3676
+origin: https://prodev.m.jd.com
+user-agent: jdltapp;android;3.8.18;;;appBuild/2318;ef/1;ep/%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22%2C%22ts%22%3A1651855656492%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22sv%22%3A%22EG%3D%3D%22%2C%22ad%22%3A%22CzUmCzvsYzSnCtYzDNq0ZG%3D%3D%22%2C%22od%22%3A%22YtLwCzc0DQG3ZNOzEQS2Zq%3D%3D%22%2C%22ov%22%3A%22Ctq%3D%22%2C%22ud%22%3A%22CzUmCzvsYzSnCtYzDNq0ZG%3D%3D%22%7D%2C%22ciphertype%22%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jd.jdlite%22%7D;Mozilla/5.0 (Linux; Android 9; MI 6 Build/PKQ1.190118.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36
+content-type: application/x-www-form-urlencoded
+accept: */*
+referer: https://prodev.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?sid=bf6ae253e73f472d5ec294810f46665w&un_area=7_502_35752_35860
+accept-encoding: gzip, deflate
+accept-language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7
+cookie: __jdc=122270672
+cookie: shshshfpb=i-nZuDwz9U0IJ08PSCKQDcQ
+cookie: shshshfpa=6c587f6e-f819-62b8-871f-dc7075c10d10-1644510112
+cookie: 3AB9D23F7A4B3C9B=QOQLSMVW3Y63TDJJBLFPWR4MNK4Q7BXW65V6BUKIP34ZBGLV5XQOC56EYKUAHPEAJXBNZH26C64PITXHDYL7PPAZZI
+cookie: cid=8
+cookie: currenttime=1644510633.795
+cookie: pt_key=app_openAAJidQPLADB7gT8CVFftd4lyIUEB1Kp9KAOi-6S3JLZ-FtDKkUHx3HHPJIyz_5f5Qau_6SFsmwc
+cookie: pt_pin=jd_pUqRzarKsZhc
+cookie: pwdt_id=jd_pUqRzarKsZhc
+cookie: sid=bf6ae253e73f472d5ec294810f46665w
+cookie: __jdv=122270672%7Candroidapp%7Ct_335139774%7Cappshare%7CWxfriends%7C1648294703851
+cookie: unpl=JF8EAMpnNSttCBxTABpSHkJFTFgBW18OGR9RZ2IHUQ5fTVwNTlAZR0d7XlVdXhRKFR9sYxRVXlNIXQ4eCisSEXtdVV9cCUIfCmdlNVRZXiVVaxsLHnx-HA1SW15bQhRTbmBWXF5fTmQ1GAIrEyBLWlFYWwBLFQBtYgVWXVBLUgUcBR8TGHttVFZZOEsWAm5nAF1eWE5XASsyHxQTTVlVX1wLexYzbldWOggICAldTx5HSFUGXVNbWw5DFwFsZQBUX1hDVAMbBRwWEUNtVW5e
+cookie: __jda=122270672.16445100137031789359088.1644510013.1651842970.1651854251.4
+cookie: pre_session=pts0ieHVhuLPCHvq8j6joykENjKsU5sb|680
+cookie: pre_seq=8
+cookie: __jdb=122270672.17.16445100137031789359088|4.1651854251
+cookie: mba_sid=198.69
+cookie: joyytokem=babel_3H885vA4sQj6ctYzzPVix4iiYN2PMDFHeXhyUTk5MQ==.dk9NQ2lyTE5EYXdOSww4Hz07RCURAT5FL3ZVTl5ga0gGQC92BxFfPx0MPAUrfixIOxt3QSghEgwoPBEAOQ==.7dfab84c
+cookie: shshshfp=f2dbab78830b23509400e381d26f3082
+cookie: shshshsID=9e54777bb922d7e8d646fa4e6a87c450_3_1651855666849
+cookie: _gia_s_local_fingerprint=4f034b2125956764e2565065547b5f7d
+cookie: _gia_s_e_joint={"eid":"QOQLSMVW3Y63TDJJBLFPWR4MNK4Q7BXW65V6BUKIP34ZBGLV5XQOC56EYKUAHPEAJXBNZH26C64PITXHDYL7PPAZZI","ma":"","im":"","ip":"183.157.162.236","ia":"","uu":"","at":"100"}
+cookie: __jd_ref_cls=Babel_FreeCoupon
+cookie: joyya=1651855659.1651855781.29.0c2cfa0
+cookie: mba_muid=16445100137031789359088.198.1651855865884
+x-requested-with: com.jd.jdlite
+
