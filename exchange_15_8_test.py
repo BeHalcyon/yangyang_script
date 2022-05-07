@@ -10,4 +10,4 @@ new Env("极速版15减8测试版(python)");
 '''
 
 from exchange_lib import *
-exchangeCouponsMayMonth(header="https://api.m.jd.com/client.action?functionId=newBabelAwardCollection", body_with_logs_file="/ql/scripts/XiangyangHe_yangyang_script/logs.npy")
+exchangeCouponsMayMonth(header="https://api.m.jd.com/client.action?functionId=newBabelAwardCollection", body_with_logs_file="/ql/scripts/XiangyangHe_yangyang_script/logs.npy", waiting_delta=0.36)

@@ -18,6 +18,7 @@ import collections
 
 def printT(s):
     print("[{0}]: {1}".format(datetime.datetime.now(), s), flush=True)
+    # print("[{0}]: {1}".format(datetime.datetime.now(), s))
     sys.stdout.flush()
 
 def getEnvs(label):
@@ -166,14 +167,20 @@ class LogProcess:
 
 
 
+# 处理ck和log的数据库，分别有两张表
 class SQLProcess:
 
     def __init__(self, table_name, database_dict = {
                                                     'type': 'sqlite',
                                                     'name': "filtered_cks.db"
-                                                   }):
+                                                   }, table_type='cookie', default_times=3):
         self.database_dict = database_dict
         self.table_name = self.getTableName(table_name)
+        # # 默认为处理ck的表，如果需要处理logs，则table_type为'log'
+        self.table_type = table_type
+        if self.table_type == 'log':
+            self.log_set = set()
+        self.default_times = default_times
         print(self.table_name)
         self.createDatebase()
         self.createTable()
@@ -209,8 +216,8 @@ class SQLProcess:
                     database = self.database_dict['database']
                 )
                 end = time.time()
-                # 两秒超时
-                if end - start > 2:
+                # 3秒超时
+                if end - start > 3:
                     raise Exception
                 print("Connected to remote mysql successfully...")
             except Exception as e:
@@ -223,24 +230,143 @@ class SQLProcess:
         self.c = self.conn.cursor()
         return self.conn
         
+    
     def createTable(self):
-        # 时间戳；ck；日期；优先级；权重（拟运行次数）
-        self.c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name}
-                           (TIMESTAMP REAL PRIMARY KEY NOT NULL, 
-                           USER_NAME TEXT NOT NULL, 
-                           DATE TEXT NOT NULL, 
-                           PRIORITY INT NOT NULL,
-                           TIMES INT NOT NULL DEFAULT 0);
-                           ''')
-        
-        self.conn.commit()
+        if self.table_type == 'cookie':
+            # 时间戳；ck；日期；优先级；权重（拟运行次数）
+            self.c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name}
+                            (TIMESTAMP REAL PRIMARY KEY NOT NULL, 
+                            USER_NAME TEXT NOT NULL, 
+                            DATE TEXT NOT NULL, 
+                            PRIORITY INT NOT NULL,
+                            TIMES INT NOT NULL DEFAULT 0);
+                            ''')
+            self.conn.commit()
+        elif self.table_type == 'log':
+            self.c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name}
+                            (TIMESTAMP REAL PRIMARY KEY NOT NULL, 
+                            LOG TEXT NOT NULL,
+                            TIMES INT NOT NULL);
+                            ''')
+            self.conn.commit()
+
+        else:
+            print("ERROR in 'table_type'!")
+            return
+
         print(f"Table {self.table_name} has been created.")
 
     def deleteTable(self):
         self.c.execute(f"DROP TABLE {self.table_name};")
         self.conn.commit()
         print(f"Table {self.table_name} has been deleted.")
-        
+    
+    def insertLog(self, log, times=3):
+        if self.table_type != 'log':
+            return
+        # 每次插入执行三次，存在即不插入
+        p = self.c.execute(f'''
+                        SELECT COUNT(*) from {self.table_name} WHERE LOG = '{log}'
+                        ''')
+        if self.c.fetchone()[0] > 0:
+            print("ERROR IN INSERT LOG: LOG exists...")
+            return
+        else:
+            # 插入times次数的log
+            self.c.execute(f'''INSERT INTO {self.table_name} (TIMESTAMP, LOG, TIMES)
+                                VALUES ({time.time()}, '{log}', {times})''')
+            
+            # for i in range(times):
+            #     self.c.execute(f'''INSERT INTO {self.table_name} (TIMESTAMP, LOG)
+            #                     VALUES ({time.time()}, '{log}')''')
+            self.conn.commit()
+            print(f"Log has been inserted into Table {self.table_name}.")
+
+    # 多层插入没有判断次数，存在就更新！！！
+    def insertManyLog(self, logs, times=3):
+        if self.table_type != 'log':
+            return
+
+        # 查询所有的log，存入set，去重
+        self.c.execute(f'''
+                    SELECT LOG from {self.table_name}
+                    ''')
+        for log in self.c.fetchall():
+            self.log_set.add(log)
+
+        dup_logs = []
+        for log in logs:
+            if log in self.log_set: 
+                continue
+            for t in range(times):
+                dup_logs.append((time.time(), log, times))
+                time.sleep(0.0001)
+        # 存在则更新
+        # self.c.executemany(f'''INSERT INTO {self.table_name} (TIMESTAMP, LOG, TIMES) VALUES (%s, %s, %s)
+        #                     WHERE NOT EXISTS (SELECT * FROM {self.table_name} WHERE LOG=%s)
+        #                     ''', dup_logs)
+        # self.c.executemany(f"REPLACE INTO {self.table_name} (TIMESTAMP, LOG, TIMES) VALUES (%s, %s, %s)", dup_logs)
+        self.c.executemany(f"INSERT INTO {self.table_name} (TIMESTAMP, LOG, TIMES) VALUES (%s, %s, %s)", dup_logs)
+        self.conn.commit()
+        print(f"Logs have been inserted into Table {self.table_name}. Inserted length : {len(dup_logs)}")
+
+    def updateDualLog(self):
+        pass
+
+
+    # 取出一条log，并从中删除该条信息
+    def getLog(self):
+        if self.table_type != 'log':
+            return
+        # 查第一条select * from table  LIMIT 1
+        p = self.c.execute(f'''
+                        SELECT * from {self.table_name} LIMIT 1
+                        ''')
+        result = self.c.fetchone()
+        # 将该条信息删除，或者次数-1DELETE FROM  WHERE
+        if result is not None:
+            if result[2] == 1:
+                self.c.execute(f'''
+                            DELETE FROM {self.table_name} WHERE LOG = {result[1]}
+                            ''')
+            else:
+                self.c.execute(f"REPLACE INTO {self.table_name} (TIMESTAMP, LOG, TIMES) VALUES ({time.time()}, '{result[1]}', {result[2]-1})", )
+            self.conn.commit()
+            print(f"Log has been get and updated/deleted from Table {self.table_name}.")
+            return result[1]
+        else:
+            print("ERROR IN GET LOG: No log in Table {self.table_name}. Please add log!")
+            return ''
+        return result[1] if result is not None else ''
+
+    # 取出多条log，并从中删除
+    def getManyLog(self, log_num=1, times=3):
+        log_item_num = (log_num + times - 1) // times
+        if self.table_type != 'log':
+            return
+        self.c.execute(f'''
+                        SELECT * from {self.table_name} LIMIT {log_item_num}
+                        ''')
+        result = self.c.fetchall()
+        if result is not None:
+            self.c.execute(f'''
+                        DELETE FROM {self.table_name} LIMIT {log_item_num}
+                        ''')
+            self.conn.commit()
+            print(f"Logs (the first {log_item_num}) have been get and deleted from Table {self.table_name}.")
+            res = []
+            for x in list(result):
+                for t in range(times):
+                    res.append(x[1])
+        else:
+            print("ERROR IN GET LOG: No log in Table {self.table_name}. Please add log!")
+            res = []
+        res_length = len(res)
+        for i in range(res_length, log_num):
+            res.append('')
+            print("ERROR IN GET LOG: Few logs in Table {self.table_name}. Please add log!")
+        return res
+
     def insertItem(self, user_name, timestamp, year_month_day, priority):
         if self.findUserName(user_name, year_month_day):
             print(f"{getUserName(user_name)} is in Table {self.table_name}. Updating...")
@@ -379,6 +505,24 @@ class SQLProcess:
                         ''')
         return self.c.fetchone()[0] != 0
     
+    def logsNumber(self):
+        self.c.execute(f'''
+                SELECT COUNT(*) from {self.table_name}
+                ''')
+        return self.c.fetchone()[0]
+    def printAllLogs(self):
+        self.printLogs(0x7fffffff)
+        # if self.table_type != 'log': return
+        # self.c.execute(f"SELECT * FROM {self.table_name}")
+        # for item in self.c.fetchall():
+        #     print(f"{item[1] if len(item[1]) < 30 else item[1][::50][:50]}")
+
+    def printLogs(self, log_num=10):
+        if self.table_type != 'log': return
+        self.c.execute(f"SELECT * FROM {self.table_name} LIMIT {log_num}")
+        for item in self.c.fetchall():
+            print(f"{item[1] if len(item[1]) < 30 else item[1][::50][::-1][:50]}\t{item[2]}")
+
     def printTodayItems(self):
         self.printAllItems(str(datetime.date.today()))
     
@@ -402,6 +546,7 @@ class SQLProcess:
             
     def close(self):
         self.conn.close()
+    
     
 
 def getUserName(cookie):
@@ -498,7 +643,9 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
                     # flag_arr[i] = False
                     mask_dict[ck] = -1
                     msg(f"所有进程停止账号：{getUserName(ck)}")
-                if result['subCode'] == 'A19' or result['subCode'] == 'A28': # 很抱歉没抢到
+                # if result['subCode'] == 'A19' or result['subCode'] == 'A28': # 很抱歉没抢到
+                # 2022年5月会因为log问题出现“很抱歉”，删掉
+                if result['subCode'] == 'A19': # 很抱歉没抢到
                     mask_dict[ck] = 0
                     msg(f"所有进程停止账号：{getUserName(ck)}")
                     
@@ -510,7 +657,7 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
 def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_with_logs_file="./logs", batch_size=5, waiting_delta=0.3):
 
     # 读取具有body的log文件
-    log_process = LogProcess(body_with_logs_file)
+    # log_process = LogProcess(body_with_logs_file)
 
 
     debug_flag = False
@@ -549,7 +696,7 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
                 }
 
     # 存入数据库
-    database = SQLProcess("coupons_15_8", database_dict)
+    database = SQLProcess("cks_coupons_15_8", database_dict)
     # 插入所有数据，如果存在则更新
     insert_start = time.time()
     for i, ck in enumerate(cookies):
@@ -561,42 +708,60 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
     print('\n更新前数据库如下：')
     database.printTodayItems()
 
+
     # 可修订仓库batch size
     cookies, visit_times = database.filterUsers(batch_size)
 
     # 线程数量
-    process_number = 1
+    process_number = 4
     # 每个线程每个账号循环次数
-    loop_times = 20 // len(cookies) + 1
+    loop_times = 10 // len(cookies) + 1
+
+
+    # 读取log对应的body
+    # log_numbers为每次运行时需要调用log的次数
+    log_numbers = process_number * len(cookies) * loop_times
+    # 创建log数据库
+    print()
+    log_database = SQLProcess(table_name='speed_log', database_dict = database_dict, table_type='log')
+    log_database.printLogs()
+
+    log_bodies = log_database.getManyLog(log_numbers)
 
 
     # 每个账户的请求头及UA固定
-    request_url_dict = {}
-    for ck in cookies:
-        ua = userAgent()
-        for lt in range(loop_times):
-            # 从bodies中获取body
-            if ck not in request_url_dict.keys():
-                request_url_dict[ck] = []
-            request_url_dict[ck].append({
-                    'url': header,
-                    'headers': {
-                        "Accept": "*/*",
-                        "Accept-Encoding": "gzip, deflate",
-                        "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-                        "Connection": "keep-alive",
-                        "Content-Type": "application/x-www-form-urlencoded",
-                        'origin': 'https://pro.m.jd.com',
-                        "Referer": "https://prodev.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?sid=bf6ae253e73f472d5ec294810f46665w&un_area=7_502_35752_35860",
-                        "Cookie": ck,
-                        "User-Agent": ua,
-                    },
-                    'body': log_process.get()
-                })
+    # 每个线程对应的不一样
+    request_url_dict = [{} for i in range(process_number)]
+    log_index = 0
+    for process_id in range(process_number):
+        for ck in cookies:
+            ua = userAgent()
+            for lt in range(loop_times):
+                # 从bodies中获取body
+                if ck not in request_url_dict[process_id].keys():
+                    request_url_dict[process_id][ck] = []
+                request_url_dict[process_id][ck].append({
+                        'url': header,
+                        'headers': {
+                            "Accept": "*/*",
+                            "Accept-Encoding": "gzip, deflate",
+                            "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+                            "Connection": "keep-alive",
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            'origin': 'https://pro.m.jd.com',
+                            "Referer": "https://prodev.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?sid=bf6ae253e73f472d5ec294810f46665w&un_area=7_502_35752_35860",
+                            "Cookie": ck,
+                            "User-Agent": ua,
+                        },
+                        'body': log_bodies[log_index]
+                    })
+                log_index += 1
 
     print("\n待抢账号：")
     print("\n".join([getUserName(ck) for ck in cookies]), '\n')
 
+    # logs的mask
+    logs_mask_dict = multiprocessing.Manager().dict()
 
     # 进程共享数据, -1为抢到，0为火爆
     mask_dict = multiprocessing.Manager().dict()
@@ -626,7 +791,8 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
         pool = multiprocessing.Pool(processes = process_number)
         for i in range(process_number):
             # random.shuffle(cookies)
-            pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict, mask_dict, ))
+            # pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict, mask_dict, ))
+            pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict[i], mask_dict, ))
 
         pool.close()
         pool.join()
@@ -650,7 +816,7 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
 
     database.close()
 
-    log_process.save()
+    # log_process.save()
 
 def exchangeCoupons(url='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body='None', batch_size=5, waiting_delta=0.3):
 
