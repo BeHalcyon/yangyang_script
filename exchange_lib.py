@@ -723,7 +723,9 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
     log_numbers = process_number * len(cookies) * loop_times
     # 创建log数据库
     print()
-    log_database = SQLProcess(table_name='speed_log', database_dict = database_dict, table_type='log')
+    # TODO
+    table_name = 'speed_log_20220508'
+    log_database = SQLProcess(table_name=table_name, database_dict = database_dict, table_type='log')
     log_database.printLogs()
 
     log_bodies = log_database.getManyLog(log_numbers)
