@@ -804,7 +804,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
             # random.shuffle(cookies)
             # pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict, mask_dict, ))
             pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict[i], mask_dict, ))
-            time.sleep(0.03)
+            time.sleep(0.025)
 
         pool.close()
         pool.join()
