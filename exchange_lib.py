@@ -717,12 +717,16 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
     database.printTodayItems()
 
 
-    # 可修订仓库batch size
-    cookies, visit_times = database.filterUsers(batch_size)
+    # 可修订仓库batch size，非零点抢券时更新
+    if datetime.datetime.now().strftime('%H') != '23':
+        cookies, visit_times = database.filterUsers(batch_size)
 
     # 线程数量
     # process_number = 4
     # 每个线程每个账号循环次数
+    if len(cookies) == 0:
+        print("All accounts have the coupon today! Exiting...")
+        return
     loop_times = 4 // len(cookies) + 1
 
 
