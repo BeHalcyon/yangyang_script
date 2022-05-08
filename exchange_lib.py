@@ -699,7 +699,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
                 }
 
     # 存入数据库
-    database = SQLProcess("cks_coupons_15_8", database_dict)
+    database = SQLProcess(json.dumps(body_dict), database_dict)
     # 插入所有数据，如果存在则更新
     insert_start = time.time()
     for i, ck in enumerate(cookies):
