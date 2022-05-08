@@ -612,7 +612,7 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
     # }
     # 当前时间段抢空；；活动结束了
     process_stop_code_set = set(['D2', 'A15', 'A6'])
-    if datetime.datetime.now().strftime('%H')) != '23':
+    if datetime.datetime.now().strftime('%H') != '23':
         process_stop_code_set.add('A14') # 今日没了
 
     # flag_arr = [True]*len(cks)
