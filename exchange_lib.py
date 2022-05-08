@@ -12,7 +12,6 @@ import random
 import sqlite3 as sqlite
 import mysql.connector as mysql
 import hashlib 
-import numpy as np
 import os
 import collections
 
@@ -120,50 +119,50 @@ class msg(object):
 
 
 
-class LogProcess:
-    def __init__(self, body_with_logs_file='./logs.npy'):
-        self.body_with_logs_file = body_with_logs_file
-        self.d = collections.defaultdict(int)
-        if os.path.exists(body_with_logs_file):
-            self.bodies = np.load(body_with_logs_file)
-            print("log file exists...")
-            for b in self.bodies:
-                self.d[b] += 1
-        else:
-            self.bodies = np.array([], dtype=np.string_)
+# class LogProcess:
+#     def __init__(self, body_with_logs_file='./logs.npy'):
+#         self.body_with_logs_file = body_with_logs_file
+#         self.d = collections.defaultdict(int)
+#         if os.path.exists(body_with_logs_file):
+#             self.bodies = np.load(body_with_logs_file)
+#             print("log file exists...")
+#             for b in self.bodies:
+#                 self.d[b] += 1
+#         else:
+#             self.bodies = np.array([], dtype=np.string_)
 
-    def write(self, times=3, item=''):
-        if self.d[item] >= 1:
-            print("ERROR IN INSERT! The log is existed!")
-            return
-        for i in range(times):
-            self.bodies = np.append(self.bodies, item)
-        self.d[item] += 1
-        print("item has been inserted...")
+#     def write(self, times=3, item=''):
+#         if self.d[item] >= 1:
+#             print("ERROR IN INSERT! The log is existed!")
+#             return
+#         for i in range(times):
+#             self.bodies = np.append(self.bodies, item)
+#         self.d[item] += 1
+#         print("item has been inserted...")
 
-    # 获取一条log，获取一条就删一条
-    def get(self):        
-        if len(self.bodies):
-            res = self.bodies[0]
-            self.bodies = self.bodies[1:]
-        else:
-            res = ''
-            print("ERROR IN GET LOG! No log!")
-        return res
+#     # 获取一条log，获取一条就删一条
+#     def get(self):        
+#         if len(self.bodies):
+#             res = self.bodies[0]
+#             self.bodies = self.bodies[1:]
+#         else:
+#             res = ''
+#             print("ERROR IN GET LOG! No log!")
+#         return res
 
-    def print(self):
-        print(self.bodies)
+#     def print(self):
+#         print(self.bodies)
 
-    # 删除全部元素并初始化
-    def remove(self):
-        if os.path.exists(self.body_with_logs_file):
-            os.remove(self.body_with_logs_file)
-        self.__init__()
-        print("logs file has been initialized...")
+#     # 删除全部元素并初始化
+#     def remove(self):
+#         if os.path.exists(self.body_with_logs_file):
+#             os.remove(self.body_with_logs_file)
+#         self.__init__()
+#         print("logs file has been initialized...")
 
-    def save(self):
-        np.save(self.body_with_logs_file, self.bodies)
-        print("logs file has been written...")
+#     def save(self):
+#         np.save(self.body_with_logs_file, self.bodies)
+#         print("logs file has been written...")
 
 
 
