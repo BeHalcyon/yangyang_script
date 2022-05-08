@@ -728,7 +728,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
     print()
     # TODO
     table_name = 'log_20220508_t'
-    log_database = SQLProcess(table_name=table_name, database_dict=database_dict, table_type='log')
+    log_database = SQLProcess(table_name=body_dict['args'], database_dict=database_dict, table_type='log')
     log_database.printLogs()
 
     # log_str包含了log和random两个参数的字符串
