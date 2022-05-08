@@ -715,7 +715,7 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
     # 线程数量
     process_number = 4
     # 每个线程每个账号循环次数
-    loop_times = 10 // len(cookies) + 1
+    loop_times = 4 // len(cookies) + 1
 
 
     # 读取log对应的body
@@ -795,6 +795,7 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
             # random.shuffle(cookies)
             # pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict, mask_dict, ))
             pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict[i], mask_dict, ))
+            time.sleep(0.03)
 
         pool.close()
         pool.join()
