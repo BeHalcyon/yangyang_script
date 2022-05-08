@@ -699,7 +699,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
                 }
 
     # 存入数据库
-    database = SQLProcess(json.dumps(body_dict), database_dict)
+    database = SQLProcess(body_dict['args'].replace('=', '').replace(',', ''), database_dict)
     # 插入所有数据，如果存在则更新
     insert_start = time.time()
     for i, ck in enumerate(cookies):
@@ -726,9 +726,8 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
     log_numbers = process_number * len(cookies) * loop_times
     # 创建log数据库
     print()
-    # TODO
-    table_name = 'log_20220508_t'
-    log_database = SQLProcess(table_name=body_dict['args'].replace('=', '').replace(',', ''), database_dict=database_dict, table_type='log')
+    table_name = 'log_' + datetime.datetime.now().strftime("%Y%m%d")
+    log_database = SQLProcess(table_name=table_name, database_dict=database_dict, table_type='log')
     log_database.printLogs()
 
     # log_str包含了log和random两个参数的字符串
