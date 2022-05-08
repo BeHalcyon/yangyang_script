@@ -14,6 +14,7 @@ import mysql.connector as mysql
 import hashlib 
 import os
 import collections
+from urllib import parse
 
 def printT(s):
     print("[{0}]: {1}".format(datetime.datetime.now(), s), flush=True)
@@ -652,6 +653,176 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
         if flag:
             break
 
+def generateBody(body_dict, log_dict):
+    body = json.dumps({"activityId": body_dict['activityId'],
+                       "scene": body_dict['scene'],
+                       "args": body_dict['args'],
+                       "log": log_dict['log'],
+                       "random": log_dict['random']}
+                      ).replace(' ', '')
+    return f"body={parse.quote(body)}"
+
+def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_dict = {}, batch_size=5, waiting_delta=0.3, process_number=4):
+    debug_flag = False
+
+    requests.packages.urllib3.disable_warnings()
+
+    pwd = os.path.dirname(os.path.abspath(__file__)) + os.sep
+    path = pwd + "env.sh"
+
+    sid = ''.join (random.sample ('123456789abcdef123456789abcdef123456789abcdef123456789abcdef', 32))
+    sid_ck = ''.join (random.sample ('123456789abcdef123456789abcdef123456789abcdef123456789abcdefABCDEFGHIJKLMNOPQRSTUVWXYZ', 43))
+
+    cookies = os.environ["JD_COOKIE"].split('&')
+
+    # 只抢前4个号
+    cookies = cookies[:4]
+
+    if 'DATABASE_TYPE' in os.environ and \
+        'DATABASE_HOST' in os.environ and \
+        'DATABASE_PORT' in os.environ and \
+        'DATABASE_USER' in os.environ and \
+        'DATABASE_PASSWD' in os.environ and \
+        'DATABASE_DATABASE' in os.environ:
+        database_dict = {
+                    "type":     os.environ['DATABASE_TYPE'],
+                    "host":     os.environ['DATABASE_HOST'],        # 数据库主机地址
+                    "port":     os.environ['DATABASE_PORT'],
+                    "user":     os.environ['DATABASE_USER'],        # 数据库用户名
+                    "passwd":   os.environ['DATABASE_PASSWD'],      # 数据库密码
+                    "database": os.environ['DATABASE_DATABASE']
+                }
+    else:
+        database_dict = {
+                    'type': 'sqlite',
+                    'name': "filtered_cks.db"
+                }
+
+    # 存入数据库
+    database = SQLProcess("cks_coupons_15_8", database_dict)
+    # 插入所有数据，如果存在则更新
+    insert_start = time.time()
+    for i, ck in enumerate(cookies):
+        database.insertItem(ck, time.time(), str(datetime.date.today()), len(cookies) - i)
+    insert_end = time.time()
+    print("\n插入/更新数据库操作耗时为：{:.2f}s\n".format(insert_end - insert_start))
+
+
+    print('\n更新前数据库如下：')
+    database.printTodayItems()
+
+
+    # 可修订仓库batch size
+    cookies, visit_times = database.filterUsers(batch_size)
+
+    # 线程数量
+    # process_number = 4
+    # 每个线程每个账号循环次数
+    loop_times = 4 // len(cookies) + 1
+
+
+    # 读取log对应的body
+    # log_numbers为每次运行时需要调用log的次数
+    log_numbers = process_number * len(cookies) * loop_times
+    # 创建log数据库
+    print()
+    # TODO
+    table_name = 'log_20220508_t'
+    log_database = SQLProcess(table_name=table_name, database_dict=database_dict, table_type='log')
+    log_database.printLogs()
+
+    # log_str包含了log和random两个参数的字符串
+    log_str_arr = log_database.getManyLog(log_numbers)
+
+
+    # 每个账户的请求头及UA固定
+    # 每个线程对应的不一样
+    request_url_dict = [{} for i in range(process_number)]
+    log_index = 0
+    for process_id in range(process_number):
+        for ck in cookies:
+            ua = userAgent()
+            for lt in range(loop_times):
+                # 从bodies中获取body
+                if ck not in request_url_dict[process_id].keys():
+                    request_url_dict[process_id][ck] = []
+                # 创建body
+                request_url_dict[process_id][ck].append({
+                        'url': header,
+                        'headers': {
+                            "Accept": "*/*",
+                            "Accept-Encoding": "gzip, deflate",
+                            "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+                            "Connection": "keep-alive",
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            'origin': 'https://pro.m.jd.com',
+                            "Referer": "https://prodev.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?sid=bf6ae253e73f472d5ec294810f46665w&un_area=7_502_35752_35860",
+                            "Cookie": ck,
+                            "User-Agent": ua,
+                        },
+                        'body': generateBody(body_dict, json.loads(log_str_arr[log_index]))
+                    })
+                log_index += 1
+
+    print("\n待抢账号：")
+    print("\n".join([getUserName(ck) for ck in cookies]), '\n')
+
+    # logs的mask
+    logs_mask_dict = multiprocessing.Manager().dict()
+
+    # 进程共享数据, -1为抢到，0为火爆
+    mask_dict = multiprocessing.Manager().dict()
+    for ck in cookies:
+        mask_dict[ck] = 1
+
+    # 打乱数组
+    cookies_array = []
+    for i in range(process_number):
+        random.shuffle(cookies)
+        cookies_array.append(cookies.copy())
+
+    msg().main()
+
+    nex_minute = (datetime.datetime.now() + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
+    waiting_time = (nex_minute - datetime.datetime.now()).total_seconds()
+    
+
+    if not debug_flag:
+        msg(f"等待{waiting_time}s")
+
+        # waiting # 部署时需要去掉注释
+        time.sleep(max(waiting_time - waiting_delta, 0))
+
+        msg("Sub-process(es) start.")
+        
+        pool = multiprocessing.Pool(processes = process_number)
+        for i in range(process_number):
+            # random.shuffle(cookies)
+            # pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict, mask_dict, ))
+            pool.apply_async(exchange, args=(i+1, cookies_array[i], loop_times, request_url_dict[i], mask_dict, ))
+            time.sleep(0.03)
+
+        pool.close()
+        pool.join()
+
+        msg("Sub-process(es) done.")
+
+    print()
+
+    # 将为False的ck更新为负值
+    for ck, state in mask_dict.items():
+        if state <= 0:
+            database.insertItem(ck, time.time(), str(datetime.date.today()), state)
+        # else:
+            # 当前尚未抢到时，权重+1，state为0时说明火爆，不自增
+        database.addTimes(ck, str(datetime.date.today()))
+        if state == -1:
+            print(f"账号：{getUserName(ck)} 抢到优惠券")
+
+    print('\n更新后数据库如下：')
+    database.printTodayItems()
+
+    database.close()
 
 def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_with_logs_file="./logs", batch_size=5, waiting_delta=0.3):
 
@@ -723,7 +894,8 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
     # 创建log数据库
     print()
     # TODO
-    table_name = 'speed_log_20220508'
+    # table_name = 'speed_log_20220508'
+    table_name = 'log_' + datetime.datetime.now().strftime("%Y%m%d")
     log_database = SQLProcess(table_name=table_name, database_dict = database_dict, table_type='log')
     log_database.printLogs()
 
