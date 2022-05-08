@@ -610,6 +610,10 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
     #     },
     #     'body': body,
     # }
+    # 当前时间段抢空；；活动结束了
+    process_stop_code_set = set(['D2', 'A15', 'A6'])
+    if datetime.datetime.now().strftime('%H')) != '23':
+        process_stop_code_set.add('A14') # 今日没了
 
     # flag_arr = [True]*len(cks)
     for t in range(loop_times):
@@ -633,7 +637,8 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
             #     break
             if 'subCode' in result.keys():
                 # if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
-                if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A15' or result['subCode'] == 'A6': # 当前时间段抢空；今日没了；；活动结束了
+                if result['subCode'] in process_stop_code_set:
+                # if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A15' or result['subCode'] == 'A6': # 当前时间段抢空；今日没了；；活动结束了
                     # 直接停止该线程
                     msg("停止所有进程...")
                     flag = True
@@ -767,7 +772,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
     print("\n".join([getUserName(ck) for ck in cookies]), '\n')
 
     # logs的mask
-    logs_mask_dict = multiprocessing.Manager().dict()
+    # logs_mask_dict = multiprocessing.Manager().dict()
 
     # 进程共享数据, -1为抢到，0为火爆
     mask_dict = multiprocessing.Manager().dict()
