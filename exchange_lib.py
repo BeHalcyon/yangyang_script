@@ -292,7 +292,7 @@ class SQLProcess:
                     SELECT LOG from {self.table_name}
                     ''')
         for log in self.c.fetchall():
-            self.log_set.add(log)
+            self.log_set.add(log[0])
 
         dup_logs = []
         for log in logs:
