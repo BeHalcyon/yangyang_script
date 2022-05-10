@@ -216,8 +216,8 @@ class SQLProcess:
                     database = self.database_dict['database']
                 )
                 end = time.time()
-                # 3秒超时
-                if end - start > 3:
+                # 5秒超时
+                if end - start > 5:
                     raise Exception
                 print("Connected to remote mysql successfully...")
             except Exception as e:
@@ -498,6 +498,29 @@ class SQLProcess:
             times.append(x[1])
         # users, times = [x[0] for x in p], [x[-1] for x in p]
         return users[:min(len(users), user_number)], times[:min(len(times), user_number)]
+
+    # 优先选择前priority_number个用户。超过priority_number时，再逐次捕获
+    # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
+    def filterUsersWithPriorityLimited(self, user_number=2, year_month_day = str(datetime.date.today()), priority_number=4):
+        # 为-1的都是优先级较高且抢到的
+        self.c.execute(f'''
+                        SELECT COUNT(*) FROM {self.table_name} WHERE PRIORITY = -1 AND DATE = '{year_month_day}' ORDER BY PRIORITY DESC;
+                        ''')
+        had_number = self.c.fetchone()[0]
+        # 已经抢到的数量小于预设的数量，需要加载其中尚未抢到的
+        if had_number < priority_number:
+            user_number = priority_number - had_number
+        # 超过priority_number后，根据权重选择user_number个数据进行计算。
+        self.c.execute(f'''
+                        SELECT USER_NAME, TIMES FROM {self.table_name} WHERE PRIORITY > -1 AND DATE = '{year_month_day}' ORDER BY PRIORITY DESC;
+                        ''')
+        p = self.c.fetchall()
+        users, times = [], []
+        for x in p:
+            users.append(x[0])
+        times.append(x[1])
+        # users, times = [x[0] for x in p], [x[-1] for x in p]
+        return users[:min(len(users), user_number)], times[:min(len(times), user_number)]
     
     def findUserName(self, user_name, year_month_day = str(datetime.date.today())):
         p = self.c.execute(f'''
@@ -506,10 +529,12 @@ class SQLProcess:
         return self.c.fetchone()[0] != 0
     
     def logsNumber(self):
+        if self.table_type != 'log': return -1
         self.c.execute(f'''
                 SELECT COUNT(*) from {self.table_name}
                 ''')
         return self.c.fetchone()[0]
+
     def printAllLogs(self):
         self.printLogs(0x7fffffff)
         # if self.table_type != 'log': return
@@ -667,7 +692,7 @@ def generateBody(body_dict, log_dict):
                       ).replace(' ', '')
     return f"body={parse.quote(body)}"
 
-def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_dict = {}, batch_size=5, waiting_delta=0.3, process_number=4):
+def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_dict = {}, batch_size=4, waiting_delta=0.3, process_number=4):
     debug_flag = False
 
     requests.packages.urllib3.disable_warnings()
@@ -681,7 +706,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
     cookies = os.environ["JD_COOKIE"].split('&')
 
     # 只抢前4个号
-    cookies = cookies[:4]
+    # cookies = cookies[:4]
 
     if 'DATABASE_TYPE' in os.environ and \
         'DATABASE_HOST' in os.environ and \
@@ -710,24 +735,47 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
     for i, ck in enumerate(cookies):
         database.insertItem(ck, time.time(), str(datetime.date.today()), len(cookies) - i)
     insert_end = time.time()
-    print("\n插入/更新数据库操作耗时为：{:.2f}s\n".format(insert_end - insert_start))
+    print("\nTime for updating/inserting cookie database: {:.2f}s\n".format(insert_end - insert_start))
 
 
-    print('\n更新前数据库如下：')
+    print('\nThe database before updating: ')
     database.printTodayItems()
 
 
     # 可修订仓库batch size，非零点抢券时更新
     if datetime.datetime.now().strftime('%H') != '23':
-        cookies, visit_times = database.filterUsers(batch_size)
+        # cookies, visit_times = database.filterUsers(batch_size)
+        # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
+        cookies, visit_times = database.filterUsersWithPriorityLimited(user_number=2, year_month_day=str(datetime.date.today()), priority_number=batch_size)
 
     # 线程数量
     # process_number = 4
     # 每个线程每个账号循环次数
     if len(cookies) == 0:
         print("All accounts have the coupon today! Exiting...")
+        # 当前cookies没有时，就
         return
-    loop_times = 4 // len(cookies) + 1
+
+    # 将优先级最高的ck增加一次机会，当只有1个号时不增加
+    if len(set(visit_times)) > 1:
+        max_times = max(visit_times)
+        for i in range(len(visit_times)):
+            if visit_times[i] == max_times:
+                cookies.append(cookies[i])
+                break
+
+    '''
+    循环次数设置的比较小，
+    5个号时，每个进程循环1次。经测试平均到3次左右就抢光了
+    4个号时，每个进程循环1次。
+    3个号时，每个进程循环2次。
+    2个号时，每个进程循环2次。
+    1个号时，每个进程循环4次。
+    
+    当前版本设定每天10场，每场2*4进程，每进程最多调用6次log，共计调用480次，需要获取160个log。
+    如果每线程调用8次log，大约需要获取220个log
+    '''
+    loop_times = 3 // len(cookies) + 1
 
 
     # 读取log对应的body
@@ -741,6 +789,8 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
 
     # log_str包含了log和random两个参数的字符串
     log_str_arr = log_database.getManyLog(log_numbers)
+
+    print(f'\nCost logs number : {log_numbers}. Left logs number: {log_database.logsNumber()}.')
 
 
     # 每个账户的请求头及UA固定
