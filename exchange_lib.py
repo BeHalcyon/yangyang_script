@@ -692,7 +692,7 @@ def generateBody(body_dict, log_dict):
                       ).replace(' ', '')
     return f"body={parse.quote(body)}"
 
-def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_dict = {}, batch_size=4, waiting_delta=0.3, process_number=4):
+def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_dict = {}, batch_size=4, other_batch_size=4, waiting_delta=0.3, process_number=4):
     debug_flag = False
 
     requests.packages.urllib3.disable_warnings()
@@ -746,7 +746,10 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
     if datetime.datetime.now().strftime('%H') != '23':
         # cookies, visit_times = database.filterUsers(batch_size)
         # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
-        cookies, visit_times = database.filterUsersWithPriorityLimited(user_number=2, year_month_day=str(datetime.date.today()), priority_number=batch_size)
+        cookies, visit_times = database.filterUsersWithPriorityLimited(user_number=other_batch_size, year_month_day=str(datetime.date.today()), priority_number=batch_size)
+    # 23点只提前batch_size个
+    else:
+        cookies = cookies[:min(batch_size, len(cookies))]
 
     # 线程数量
     # process_number = 4
