@@ -756,8 +756,8 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
         # 当前cookies没有时，就
         return
 
-    # 将优先级最高的ck增加一次机会，当只有1个号时不增加
-    if len(set(visit_times)) > 1:
+    # 将优先级最高的ck增加一次机会，当存在的ck对应次数都一致时不增加。
+    if len(cookies) > 1:
         max_times = max(visit_times)
         for i in range(len(visit_times)):
             if visit_times[i] == max_times:
