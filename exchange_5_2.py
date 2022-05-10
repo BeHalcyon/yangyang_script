@@ -5,7 +5,7 @@
 Author: yangyang
 功能：
 Date: 2022-5-7
-cron: 30 59 21 * * *
+cron: 20 59 21 * * *
 new Env("极速版5减2");
 '''
 

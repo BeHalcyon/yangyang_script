@@ -750,6 +750,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
     # 23点只提前batch_size个
     else:
         cookies = cookies[:min(batch_size, len(cookies))]
+        visit_times = []
 
     # 线程数量
     # process_number = 4
@@ -760,7 +761,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
         return
 
     # 将优先级最高的ck增加一次机会，当存在的ck对应次数都一致时不增加。
-    if len(cookies) > 1:
+    if len(cookies) > 1 and len(visit_times):
         max_times = max(visit_times)
         for i in range(len(visit_times)):
             if visit_times[i] == max_times:
