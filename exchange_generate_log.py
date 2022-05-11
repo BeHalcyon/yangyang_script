@@ -39,7 +39,7 @@ generate_number = getEnvs(os.environ['JDLITE_LOG_NUMBER']) if "JDLITE_LOG_NUMBER
 api_url = os.environ['JDLITE_LOG_API'] if "JDLITE_LOG_API" in os.environ else None
 
 logs = getLogs(url=api_url, num=generate_number)
-table_name = 'log_t' + datetime.datetime.now().strftime("%Y%m%d")
+table_name = 'log_' + datetime.datetime.now().strftime("%Y%m%d")
 log_sql = SQLProcess(table_name=table_name, database_dict=database_dict, table_type='log')
 log_sql.printLogs()
 log_sql.insertManyLog(logs, times=3)
