@@ -306,6 +306,7 @@ class SQLProcess:
         #                     WHERE NOT EXISTS (SELECT * FROM {self.table_name} WHERE LOG=%s)
         #                     ''', dup_logs)
         # self.c.executemany(f"REPLACE INTO {self.table_name} (TIMESTAMP, LOG, TIMES) VALUES (%s, %s, %s)", dup_logs)
+        # self.c.executemany(f"INSERT INTO {self.table_name} (TIMESTAMP, LOG, TIMES) VALUES (%s, %s, %s)", dup_logs)
         self.c.executemany(f"INSERT INTO {self.table_name} (TIMESTAMP, LOG, TIMES) VALUES (%s, %s, %s)", dup_logs)
         self.conn.commit()
         print(f"Logs have been inserted into Table {self.table_name}. Inserted length : {len(dup_logs)}")
@@ -572,7 +573,25 @@ class SQLProcess:
     def close(self):
         self.conn.close()
     
+# 根据api接口生成sign
+def getLogs(url = None, num=400):
+    if url is None:
+        if 'JDLITE_LOG_API' not in os.environ:
+            print("ERROR! Please add JDLITE_LOG_APT!")
+            exit()
+        url = os.environ['JDLITE_LOG_API']
     
+    log_list = []
+    try:
+        for i in range(num):
+            log_list.append(json.dumps(requests.get(url=url).json()).replace(' ', ''))
+            if i % 20 == 0:
+                printT(f"Getting {i+1}/{num} logs...")
+    except:
+        log_list = []
+    print(f"All {num} logs has been get.")
+    return log_list
+
 
 def getUserName(cookie):
     try:
