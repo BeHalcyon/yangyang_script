@@ -34,11 +34,14 @@ else:
                 'name': "filtered_cks.db"
             }
 
-inserted_num = 10
-logs = getLogs(url='http://xiangyanghe.top:5889/log', num=inserted_num)
+
+generate_number = getEnvs(os.environ['JDLITE_LOG_NUMBER']) if "JDLITE_LOG_NUMBER" in os.environ else 100
+api_url = os.environ['JDLITE_LOG_API'] if "JDLITE_LOG_API" in os.environ else None
+
+logs = getLogs(url=api_url, num=generate_number)
 table_name = 'log_t' + datetime.datetime.now().strftime("%Y%m%d")
 log_sql = SQLProcess(table_name=table_name, database_dict=database_dict, table_type='log')
 log_sql.printLogs()
 log_sql.insertManyLog(logs, times=3)
-printT(f"{inserted_num} logs has been inserted.")
+printT(f"{generate_number} logs has been inserted.")
 printT(f"There are {log_sql.logsNumber()} logs in table {table_name}")
