@@ -170,7 +170,7 @@ def receiveNecklaceCouponWithLoop(cookies, api_dict, loop_times, process_id=0, p
             url, body = api_dict[cookie][process_id][t]
             headers["cookie"] = cookie
             headers["content-length"] = str(len(body))
-            prefix_info = f"账户：{getUserName(cookie)},进程：{process_id + 1}/{process_number},循环：{t + 1}/{loop_times}："
+            prefix_info = f"User: {getUserName(cookie)}, process: {process_id + 1}/{process_number}, loop: {t + 1}/{loop_times}："
             res = requests.post(url=url, headers=headers, data=body).json()
             try:
                 if res['code'] == '0' and res['msg'] == '响应成功':
@@ -236,9 +236,13 @@ def jdTime():
         return 0
 
 def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
+
+    printT("Starting...")
+
     # 每个cookie的receiveKey不一样
-    cookies = os.environ["JD_COOKIE"].split('&')
+    cookies = os.environ["JD_COOKIE"].split('&') if "JD_COOKIE" in os.environ else []
     cookies = cookies[:min(len(cookies), batch_size)]
+    
 
     # get receive key
     printT(f'Generating receive key for {len(cookies)} cookies...')
@@ -275,22 +279,23 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
 
     printT('Ready for coupons...')
     jd_timestamp = datetime.datetime.fromtimestamp(jdTime()/1000)
+    printT(f"Server delay (JD server - current server): {(jd_timestamp - datetime.datetime.now()).total_seconds()}s.")
     nex_hour = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     # nex_hour = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
-    waiting_time = (nex_hour - datetime.datetime.now()).total_seconds()
-    printT(f"Waiting {waiting_time}s")
+    waiting_time = (nex_hour - jd_timestamp).total_seconds()
+    printT(f"Waiting {waiting_time}s...")
     # waiting_delta = 0.26
     time.sleep(max(waiting_time - waiting_delta, 0))
 
     # receiveNecklaceCouponWithLoop(cookies, api_dict, loop_time, 0, process_number)
     pool = multiprocessing.Pool(processes=process_number)
     for i in range(process_number):
-        random.shuffle(cookies)
+        cookies.insert(0, cookies.pop())
         pool.apply_async(receiveNecklaceCouponWithLoop, args=(cookies.copy(), api_dict, loop_time, i, process_number, ))
-        time.sleep(0.025)
+        time.sleep(0.03)
     pool.close()
     pool.join()
 
     printT("Ending...")
 
-exchange(batch_size=4, waiting_delta=0.23, process_number=4)
+exchange(batch_size=3, waiting_delta=0.23, process_number=4)
