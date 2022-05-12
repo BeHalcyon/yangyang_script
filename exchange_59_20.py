@@ -17,7 +17,7 @@ import datetime
 import multiprocessing
 import time
 from urllib.parse import quote, unquote
-
+import os
 
 
 def printT(s):
@@ -276,6 +276,7 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
     printT('Ready for coupons...')
     jd_timestamp = datetime.datetime.fromtimestamp(jdTime()/1000)
     nex_hour = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+    # nex_hour = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
     waiting_time = (nex_hour - datetime.datetime.now()).total_seconds()
     printT(f"Waiting {waiting_time}s")
     # waiting_delta = 0.26
@@ -292,4 +293,4 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
 
     printT("Ending...")
 
-exchange(batch_size=4, waiting_delta=0.26, process_number=4)
+exchange(batch_size=4, waiting_delta=0.23, process_number=4)
