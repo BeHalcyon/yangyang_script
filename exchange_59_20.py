@@ -6,7 +6,7 @@ Author: yangyang
 功能：
 Date: 2022-5-12
 cron: 0 58 8,11,14,17,19 * * *
-new Env("京东59减20抢券");
+new Env("京东59减20");
 '''
 
 import random
@@ -191,7 +191,7 @@ def receiveNecklaceCouponWithLoop(cookies, api_dict, loop_times, process_id=0, p
                 pass
 
 
-def receiveNecklaceCoupon(url, body, cookie):
+def receiveNecklaceCoupon(url, body, cookie, loop_times=1, process_id=0, process_number=1):
     headers = {
         "Host": "api.m.jd.com",
         "cookie": cookie,
@@ -202,26 +202,28 @@ def receiveNecklaceCoupon(url, body, cookie):
         "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
         "content-length": str(len(body)),
     }
-    res = requests.post(url=url, headers=headers, data=body, timeout=30).json()
-    # print(res)
-    try:
-        if res['code'] == '0' and res['msg'] == '响应成功':
-            if res['result']['optCode'] == '9000':
-                desc = res['result']['desc']
-                quota = res['result']['couponInfoList'][0]['quota']
-                discount = res['result']['couponInfoList'][0]['discount']
-                endTime = res['result']['couponInfoList'][0]['endTime']
-                timeStamp = int(endTime) / 1000
-                timeArray = time.localtime(timeStamp)
-                otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
-                msg = f'{desc}，满{quota}减{discount}({otherStyleTime}过期)'
-                printT(msg)
+    for t in range(loop_times):
+        headers["cookie"] = cookie
+        prefix_info = f"User: {getUserName(cookie)}, process: {process_id + 1}/{process_number}, loop: {t + 1}/{loop_times}："
+        res = requests.post(url=url, headers=headers, data=body).json()
+        try:
+            if res['code'] == '0' and res['msg'] == '响应成功':
+                if res['result']['optCode'] == '9000':
+                    desc = res['result']['desc']
+                    quota = res['result']['couponInfoList'][0]['quota']
+                    discount = res['result']['couponInfoList'][0]['discount']
+                    endTime = res['result']['couponInfoList'][0]['endTime']
+                    timeStamp = int(endTime) / 1000
+                    timeArray = time.localtime(timeStamp)
+                    otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
+                    printT(prefix_info + f'{desc}，满{quota}减{discount}({otherStyleTime}过期)')
+                else:
+                    printT(prefix_info + res['result']['desc'])
             else:
-                printT(res['result']['desc'])
-        else:
-            printT(res['msg'])
-    except:
-        pass
+                printT(prefix_info + res['msg'])
+        except:
+            pass
+
 
 # jd的服务器时间
 def jdTime():
@@ -279,7 +281,9 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
 
     printT('Ready for coupons...')
     jd_timestamp = datetime.datetime.fromtimestamp(jdTime()/1000)
+    
     printT(f"Server delay (JD server - current server): {(jd_timestamp - datetime.datetime.now()).total_seconds()}s.")
+    # Debug: 测试时关闭
     nex_hour = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     # nex_hour = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
     waiting_time = (nex_hour - jd_timestamp).total_seconds()
@@ -298,4 +302,70 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
 
     printT("Ending...")
 
-exchange(batch_size=3, waiting_delta=0.23, process_number=4)
+
+# Debug: 测试时延迟很高
+# Each cookie holds only one process.
+def exchangeV2(batch_size=4, waiting_delta=0.26):
+    printT("Starting...")
+
+    # 每个cookie的receiveKey不一样
+    cookies = os.environ["JD_COOKIE"].split('&') if "JD_COOKIE" in os.environ else []
+    cookies = cookies[:min(len(cookies), batch_size)]
+
+    # get receive key
+    printT(f'Generating receive key for {len(cookies)} cookies...')
+    receive_key_dict = multiprocessing.Manager().dict()
+    pool = multiprocessing.Pool(processes=len(cookies))
+    for i in range(len(cookies)):
+        pool.apply_async(getCcFeedInfo, args=(cookies[i], receive_key_dict,))
+    pool.close()
+    pool.join()
+
+    # filter invalid receive key
+    filtered_cookies = []
+    for key, value in receive_key_dict.items():
+        if len(value):
+            filtered_cookies.append(key)
+    printT(
+        f"{len(cookies)} receive keys have been generated. {len(cookies) - len(filtered_cookies)} invalid receive keys have been filtered...")
+    cookies = filtered_cookies
+
+    # the api_dict is a dict of item, each of which includes 'url' and 'body'
+    loop_time = 2
+    process_number = len(cookies)
+    printT(
+        f"Generating {process_number * loop_time} api links, each cookie is posted by one process with {loop_time} times...")
+    api_dict = {}
+    for cookie in cookies:
+        # get url and body for each receive with api_number_for each_cookie times
+        api_dict[cookie] = []
+        for t in range(loop_time):
+            api_dict[cookie].append(getReceiveNecklaceCouponSign(receive_key=receive_key_dict[cookie]))
+
+    printT('Ready for coupons...')
+    jd_timestamp = datetime.datetime.fromtimestamp(jdTime() / 1000)
+    printT(f"Server delay (JD server - current server): {(jd_timestamp - datetime.datetime.now()).total_seconds()}s.")
+    nex_hour = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+    # nex_hour = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
+    waiting_time = (nex_hour - jd_timestamp).total_seconds()
+    printT(f"Waiting {waiting_time}s...")
+    # waiting_delta = 0.26
+    time.sleep(max(waiting_time - waiting_delta, 0))
+
+    # receiveNecklaceCouponWithLoop(cookies, api_dict, loop_time, 0, process_number)
+    pool = multiprocessing.Pool(processes=process_number)
+    random.shuffle(cookies)
+    for i in range(process_number):
+        # defaulted as loop_times post using 1 api
+        url, body = api_dict[cookies[i]][0]
+        pool.apply_async(receiveNecklaceCoupon(url, body, cookies[i], loop_times=loop_time, process_id=i, process_number=process_number))
+        time.sleep(0.025)
+    pool.close()
+    pool.join()
+
+    printT("Ending...")
+
+if __name__ == '__main__':
+    # freeze_support()
+    # exchangeV2(batch_size=3, waiting_delta=0.23)
+    exchange(batch_size=3, waiting_delta=0.23, process_number=4)
