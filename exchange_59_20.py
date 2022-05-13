@@ -75,6 +75,8 @@ def getCcFeedInfo(cookie, receive_dict):
     }
     res = getSignAPI('getCcFeedInfo', body)  # st sv sign
     if res == -1:
+        print("SIGN interface error!")
+        exit(0)
         return -1
     else:
         # print(res)
@@ -198,8 +200,8 @@ def receiveNecklaceCouponWithLoop(cookies, api_dict, loop_times, mask_dict, proc
                 mask_dict[cookie] = -1
             elif "不足" in target_info:
                 mask_dict[cookie] = 0
-            elif "未登录" in target_info:
-                mask_dict[cookie] = -2
+            # elif "未登录" in target_info:
+            #     mask_dict[cookie] = -2
 
 
 def receiveNecklaceCoupon(url, body, cookie, loop_times=1, process_id=0, process_number=1):
@@ -374,7 +376,7 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
             print(f"User: {getUserName(ck)} 抢到优惠券")
         elif state == 0:
             print(f"User: {getUserName(ck)} 点点券不足")
-        elif state == 0:
+        elif state == -2:
             print(f"User: {getUserName(ck)} ck过期")
 
     print('\nDatabase after updating：')
