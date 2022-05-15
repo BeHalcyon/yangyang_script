@@ -219,6 +219,7 @@ def receiveNecklaceCouponWithLoop(cookies, api_dict, loop_times, mask_dict, proc
         "cookie": '',
         "charset": "UTF-8",
         "user-agent": "okhttp/3.12.1;jdmall;android;version/10.1.4;build/90060;screen/720x1464;os/7.1.2;network/wifi;",
+        # "user-agent": userAgent(),
         "accept-encoding": "br,gzip,deflate",
         "cache-control": "no-cache",
         "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -347,8 +348,11 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
     print('\nDatabase before updating：')
     database.printAllItems()
 
+    # Debug 部署时修改
     cookies, visit_times = database.filterUsers(user_number=batch_size, year_month_day=today_week_str)
+    # cookies, visit_times = database.filterUsers(user_number=60, year_month_day=today_week_str)
     cookies = cookies[:min(len(cookies), batch_size)]
+    # cookies = cookies[-3:]
     print("\nAccount ready to run：")
     print("\n".join([getUserName(ck) for ck in cookies]), '\n')
 
