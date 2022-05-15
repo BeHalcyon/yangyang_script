@@ -23,27 +23,45 @@ import sqlite3 as sqlite
 from exchange_lib import *
 
 
+# def getSignAPI(functionId, body):
+#     sign_api = 'http://jd19.top:1998/newlog?func=getsign'
+#     Token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTM1NDQ2MDksImlhdCI6MTY1MjMzNTAwOSwiaXNzIjoiYmlsaWJpbGkifQ.BeYPUnXcEAMWPNdsPNGUbZ4Ms4HlJSTByqRkkzKaIvA'
+#     headers = {
+#         'Accept': '*/*',
+#         # "accept-encoding": "gzip, deflate, br",
+#         'Content-Type': 'application/json',
+#         'Authorization': 'Bearer ' + Token
+#     }
+#     data = {
+#         'functionId': functionId,
+#         'body': body
+#     }
+#     try:
+#         res = requests.post(url=sign_api, headers=headers, json=data, timeout=30).json()
+#         if res['code'] == 200:
+#             return res['data']
+#         else:
+#             print(res['msg'])
+#             return -1
+#     except:
+#         return -1
+
+
 def getSignAPI(functionId, body):
-    sign_api = 'http://jd19.top:1998/newlog?func=getsign'
-    Token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTM1NDQ2MDksImlhdCI6MTY1MjMzNTAwOSwiaXNzIjoiYmlsaWJpbGkifQ.BeYPUnXcEAMWPNdsPNGUbZ4Ms4HlJSTByqRkkzKaIvA'
+    sign_api = 'http://jd.330660.xyz/api/jd/sign'
     headers = {
-        'Accept': '*/*',
-        # "accept-encoding": "gzip, deflate, br",
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + Token
+        'Content-Type': 'application/x-www-form-urlencoded',
     }
     data = {
         'functionId': functionId,
-        'body': body
+        'body': json.dumps(body)
     }
-    try:
-        res = requests.post(url=sign_api, headers=headers, json=data, timeout=30).json()
-        if res['code'] == 200:
-            return res['data']
-        else:
-            print(res['msg'])
-            return -1
-    except:
+    res = requests.post(url=sign_api, headers=headers, data=data, timeout=30).json()
+    if res['code'] == 200:
+        # print(res)
+        return res
+    else:
+        print(res['message'])
         return -1
 
 
@@ -75,17 +93,13 @@ def getCcFeedInfo(cookie, receive_dict):
     }
     res = getSignAPI('getCcFeedInfo', body)  # st sv sign
     if res == -1:
-        print("SIGN interface error!")
-        exit(0)
         return -1
     else:
-        # print(res)
-        params = res['sign']
-        functionId = res['fn']
-        body = re_body.findall(params)[0]
-        params = params.replace(body, '')
-        url = f'https://api.m.jd.com?functionId={functionId}&' + params
-        # print(url)
+        result = res['result']
+        functionId = result['functionId']
+        rsbody = json.loads(json.dumps(result['body']))
+        url = f'https://api.m.jd.com?functionId={functionId}&body=' + rsbody
+
         headers = {
             "Host": "api.m.jd.com",
             "cookie": cookie,
@@ -94,10 +108,11 @@ def getCcFeedInfo(cookie, receive_dict):
             "accept-encoding": "br,gzip,deflate",
             "cache-control": "no-cache",
             "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "content-length": str(len(body)),
+            "content-length": str(len(rsbody)),
         }
-        res = requests.post(url=url, headers=headers, data=body, timeout=30).json()
-        # print(res)
+
+        res = requests.post(url=url, headers=headers, data=result, timeout=30).json()
+
         if res['code'] == '0':
             # return res['result']['couponList'][0]['receiveKey']
             for coupon in res['result']['couponList']:
@@ -112,6 +127,39 @@ def getCcFeedInfo(cookie, receive_dict):
             print('获取59-20券的receiveKey失败')
             receive_dict[cookie] = ""
             return -1
+        # # print(res)
+        # params = res['sign']
+        # functionId = res['fn']
+        # body = re_body.findall(params)[0]
+        # params = params.replace(body, '')
+        # url = f'https://api.m.jd.com?functionId={functionId}&' + params
+        # # print(url)
+        # headers = {
+        #     "Host": "api.m.jd.com",
+        #     "cookie": cookie,
+        #     "charset": "UTF-8",
+        #     "user-agent": "okhttp/3.12.1;jdmall;android;version/10.1.4;build/90060;screen/720x1464;os/7.1.2;network/wifi;",
+        #     "accept-encoding": "br,gzip,deflate",
+        #     "cache-control": "no-cache",
+        #     "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        #     "content-length": str(len(body)),
+        # }
+        # res = requests.post(url=url, headers=headers, data=body, timeout=30).json()
+        # # print(res)
+        # if res['code'] == '0':
+        #     # return res['result']['couponList'][0]['receiveKey']
+        #     for coupon in res['result']['couponList']:
+        #         if coupon['title'] != None and '每周可领一次' in coupon['title']:
+        #             receiveKey = coupon['receiveKey']
+        #             receive_dict[cookie] = receiveKey
+        #             return receiveKey
+        #     print('没有找到59-20券的receiveKey')
+        #     receive_dict[cookie] = ""
+        #     return -1
+        # else:
+        #     print('获取59-20券的receiveKey失败')
+        #     receive_dict[cookie] = ""
+        #     return -1
 
 
 def getUserName(cookie):
@@ -150,13 +198,19 @@ def getReceiveNecklaceCouponSign(receive_key):
     if res == -1:
         return ('', '')
     else:
-        params = res['sign']
-        functionId = res['fn']
-        body = re_body.findall(params)[0]
-        params = params.replace(body, '')
-        url = f'https://api.m.jd.com?functionId={functionId}&' + params
-        # return [url, body]
-        return (url, body)
+        result = res['result']
+        data = json.loads(json.dumps(result['body']))
+        functionId = result['functionId']
+        url = f'https://api.m.jd.com?functionId={functionId}&body=' + data
+        return (url, result)
+
+        # params = res['sign']
+        # functionId = res['fn']
+        # body = re_body.findall(params)[0]
+        # params = params.replace(body, '')
+        # url = f'https://api.m.jd.com?functionId={functionId}&' + params
+        # # return [url, body]
+        # return (url, body)
 
 
 def receiveNecklaceCouponWithLoop(cookies, api_dict, loop_times, mask_dict, process_id=0, process_number=1):
@@ -298,6 +352,19 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
     print("\nAccount ready to run：")
     print("\n".join([getUserName(ck) for ck in cookies]), '\n')
 
+    # 如果是23点，需要等待到0点后执行
+    is_23_hour = datetime.datetime.now().strftime('%H') == '23'
+    if is_23_hour:
+        jd_timestamp = datetime.datetime.fromtimestamp(jdTime() / 1000)
+        if not is_debug:
+            nex_hour = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+        else:
+            nex_hour = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
+        waiting_time = (nex_hour - jd_timestamp).total_seconds()
+        printT(f"Waiting to 00:00, waiting {waiting_time}s...")
+        time.sleep(max(waiting_time - 0.01, 0))
+
+
     # get receive key
     print()
     printT(f'Generating receive key for {len(cookies)} cookies...')
@@ -337,15 +404,16 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
     jd_timestamp = datetime.datetime.fromtimestamp(jdTime() / 1000)
 
     printT(f"Server delay (JD server - current server): {(jd_timestamp - datetime.datetime.now()).total_seconds()}s.")
-    # Debug: 测试时关闭
-    if not is_debug:
-        nex_hour = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
-    else:
-        nex_hour = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
-    waiting_time = (nex_hour - jd_timestamp).total_seconds()
-    printT(f"Waiting {waiting_time}s...")
-    # waiting_delta = 0.26
-    time.sleep(max(waiting_time - waiting_delta, 0))
+    if not is_23_hour:
+        # Debug: 测试时关闭
+        if not is_debug:
+            nex_hour = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+        else:
+            nex_hour = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
+        waiting_time = (nex_hour - jd_timestamp).total_seconds()
+        printT(f"Waiting {waiting_time}s...")
+        # waiting_delta = 0.26
+        time.sleep(max(waiting_time - waiting_delta, 0))
 
     mask_dict = multiprocessing.Manager().dict()
     for ck in cookies:
