@@ -848,6 +848,10 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
     print("\n待抢账号：")
     print("\n".join([getUserName(ck) for ck in cookies]), '\n')
 
+    # 19:59时延迟巨大。。。
+    if datetime.datetime.now().strftime('%H') == '19':
+        waiting_delta += 0.2
+
     # logs的mask
     # logs_mask_dict = multiprocessing.Manager().dict()
 

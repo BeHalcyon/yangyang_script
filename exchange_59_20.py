@@ -70,7 +70,7 @@ def getSignAPI(functionId, body):
         url = os.environ['JD_SIGN_API']
         token = os.environ['JD_SIGN_API_TOKEN']
         data = {'functionId': functionId,
-                'body': body,
+                'body': json.dumps(body),
                 'token': token
                 }
         try:
