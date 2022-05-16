@@ -47,22 +47,42 @@ from exchange_lib import *
 #         return -1
 
 
+# def getSignAPI(functionId, body):
+#     sign_api = 'http://jd.330660.xyz/api/jd/sign'
+#     headers = {
+#         'Content-Type': 'application/x-www-form-urlencoded',
+#     }
+#     data = {
+#         'functionId': functionId,
+#         'body': json.dumps(body)
+#     }
+#     res = requests.post(url=sign_api, headers=headers, data=data, timeout=30).json()
+#     if res['code'] == 200:
+#         # print(res)
+#         return res
+#     else:
+#         print(res['message'])
+#         return -1
+
 def getSignAPI(functionId, body):
-    sign_api = 'http://jd.330660.xyz/api/jd/sign'
-    headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }
-    data = {
-        'functionId': functionId,
-        'body': json.dumps(body)
-    }
-    res = requests.post(url=sign_api, headers=headers, data=data, timeout=30).json()
-    if res['code'] == 200:
-        # print(res)
-        return res
+
+    if "JD_SIGN_API" in os.environ and "JD_SIGN_API_TOKEN" in os.environ:
+        url = os.environ['JD_SIGN_API']
+        token = os.environ['JD_SIGN_API_TOKEN']
+        data = {'functionId': functionId,
+                'body': body,
+                'token': token
+                }
+        try:
+            res = requests.post(url, data=data).json()
+            return {'result': res}
+        except Exception as e:
+            print(e)
+            exit()
     else:
-        print(res['message'])
-        return -1
+        print("Please set environ first!")
+        exit()
+    
 
 
 # 产生随机子串
@@ -387,6 +407,10 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
     printT(
         f"{len(cookies)} receive keys have been generated. {len(cookies) - len(filtered_cookies)} invalid receive keys have been filtered...")
     cookies = filtered_cookies
+    if len(cookies) == 0:
+        printT("No avaliable cookie. Exiting...")
+        return
+
 
     # the api_dict is a dict of item, each of which includes 'url' and 'body'
     loop_time = 1
