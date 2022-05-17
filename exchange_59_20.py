@@ -319,6 +319,51 @@ def receiveNecklaceCoupon(url, body, cookie, loop_times=1, process_id=0, process
             pass
 
 
+def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread_number=1):
+    headers = {
+        "Host": "api.m.jd.com",
+        "cookie": '',
+        "charset": "UTF-8",
+        "user-agent": "okhttp/3.12.1;jdmall;android;version/10.1.4;build/90060;screen/720x1464;os/7.1.2;network/wifi;",
+        # "user-agent": userAgent(),
+        "accept-encoding": "br,gzip,deflate",
+        "cache-control": "no-cache",
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "content-length": '',
+    }
+
+    url, body = api_para
+    headers["cookie"] = cookie
+    headers["content-length"] = str(len(body))
+    prefix_info = f"User: {getUserName(cookie)}, process: {thread_id + 1}/{thread_number}: "
+    target_info = ""
+    res = requests.post(url=url, headers=headers, data=body).json()
+    try:
+        if res['code'] == '0' and res['msg'] == '响应成功':
+            if res['result']['optCode'] == '9000':
+                desc = res['result']['desc']
+                quota = res['result']['couponInfoList'][0]['quota']
+                discount = res['result']['couponInfoList'][0]['discount']
+                endTime = res['result']['couponInfoList'][0]['endTime']
+                timeStamp = int(endTime) / 1000
+                timeArray = time.localtime(timeStamp)
+                otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
+                target_info = f'{desc}，满{quota}减{discount}({otherStyleTime}过期)'
+            else:
+                target_info = res['result']['desc']
+        else:
+            target_info = res['msg']
+        printT(prefix_info + target_info)
+    except:
+        pass
+    if "已经兑换过" in target_info:
+        mask_dict[cookie] = -1
+    elif "不足" in target_info:
+        mask_dict[cookie] = 0
+    # elif "未登录" in target_info:
+    #     mask_dict[cookie] = -2
+
+
 # jd的服务器时间
 def jdTime():
     url = 'http://api.m.jd.com/client.action?functionId=queryMaterialProducts&client=wh5'
@@ -566,9 +611,200 @@ def exchangeV2(batch_size=4, waiting_delta=0.26):
 
     printT("Ending...")
 
+# 多进程改为多线程
+def exchangeV3(batch_size=4, waiting_delta=0.26, loop_times=4, sleep_time=0.03):
+    # TODO DEBUG
+    is_debug = True
+
+    printT("Starting..." + (" (Debug Mode)" if is_debug else ""))
+
+    # 每个cookie的receiveKey不一样
+    cookies = os.environ["JD_COOKIE"].split('&') if "JD_COOKIE" in os.environ else []
+
+    # get cookies from databse
+    if 'DATABASE_TYPE' in os.environ and \
+            'DATABASE_HOST' in os.environ and \
+            'DATABASE_PORT' in os.environ and \
+            'DATABASE_USER' in os.environ and \
+            'DATABASE_PASSWD' in os.environ and \
+            'DATABASE_DATABASE' in os.environ:
+        database_dict = {
+            "type": os.environ['DATABASE_TYPE'],
+            "host": os.environ['DATABASE_HOST'],  # 数据库主机地址
+            "port": os.environ['DATABASE_PORT'],
+            "user": os.environ['DATABASE_USER'],  # 数据库用户名
+            "passwd": os.environ['DATABASE_PASSWD'],  # 数据库密码
+            "database": os.environ['DATABASE_DATABASE']
+        }
+    else:
+        database_dict = {
+            'type': 'sqlite',
+            'name': "filtered_cks.db"
+        }
+    # 存入数据库
+    database = SQLProcess("cks_59_20_" + time.strftime("%Y%W"), database_dict)
+    # 插入所有数据，如果存在则更新
+    insert_start = time.time()
+    today_week_str = time.strftime("%Y-(%W) ")
+    for i, ck in enumerate(cookies):
+        database.insertItem(ck, time.time(), today_week_str, len(cookies) - i)
+    insert_end = time.time()
+    print("\nTime for updating/inserting into database：{:.2f}s\n".format(insert_end - insert_start))
+
+    print('\nDatabase before updating：')
+    database.printAllItems()
+
+    # Debug 部署时修改
+    cookies, visit_times = database.filterUsers(user_number=batch_size, year_month_day=today_week_str)
+    # cookies, visit_times = database.filterUsers(user_number=60, year_month_day=today_week_str)
+    cookies = cookies[:min(len(cookies), batch_size)]
+    # cookies = cookies[-3:]
+    print("\nAccount ready to run：")
+    print("\n".join([getUserName(ck) for ck in cookies]), '\n')
+
+    # 如果是23点，需要等待到0点后执行
+    is_23_hour = datetime.datetime.now().strftime('%H') == '23'
+    if is_23_hour:
+        jd_timestamp = datetime.datetime.fromtimestamp(jdTime() / 1000)
+        if not is_debug:
+            nex_hour = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+        else:
+            nex_hour = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
+        waiting_time = (nex_hour - jd_timestamp).total_seconds()
+        printT(f"Waiting to 00:00, waiting {waiting_time}s...")
+        time.sleep(max(waiting_time - 0.01, 0))
+
+        cur_index = 0
+        while cur_index < 200:
+            receive_key_dict = {}
+            getCcFeedInfo(cookies[-1], receive_key_dict)
+            if len(receive_key_dict[cookies[-1]]):
+                printT("Find receive key. Continuing...")
+                break
+            else:
+                printT("No receive key found. Waiting 3s...")
+                time.sleep(3000)
+            cur_index += 1
+
+    # get receive key
+    print()
+    printT(f'Generating receive key for {len(cookies)} cookies...')
+    receive_key_dict = multiprocessing.Manager().dict()
+    pool = multiprocessing.Pool(processes=len(cookies))
+    for i in range(len(cookies)):
+        pool.apply_async(getCcFeedInfo, args=(cookies[i], receive_key_dict,))
+    pool.close()
+    pool.join()
+
+    # filter invalid receive key
+    filtered_cookies = []
+    for key, value in receive_key_dict.items():
+        if len(value):
+            filtered_cookies.append(key)
+    printT(
+        f"{len(cookies)} receive keys have been generated. {len(cookies) - len(filtered_cookies)} invalid receive keys have been filtered...")
+    cookies = filtered_cookies
+    if len(cookies) == 0:
+        printT("No avaliable cookie. Exiting...")
+        return
+
+    # the api_dict is a dict of item, each of which includes 'url' and 'body'
+    # loop_time = 1
+    # process_number = 4
+    api_number_for_each_cookie = loop_times
+    printT(
+        f"Generating {len(cookies) * api_number_for_each_cookie} api links ({len(cookies)} cookies, {len(cookies) * api_number_for_each_cookie} threads, and {loop_times} times)...")
+    # api_dict = {}
+    # for cookie in cookies:
+    #     # get url and body for each receive with api_number_for each_cookie times
+    #     api_dict[cookie] = []
+    #     for t_id in range(len(cookies)):
+    #         buffer = []
+    #         for t in range(loop_times):
+    #             buffer.append(getReceiveNecklaceCouponSign(receive_key=receive_key_dict[cookie]))
+    #         api_dict[cookie].append(buffer)
+
+    thread_api_arrays = []
+    for t in range(loop_times):
+        for cookie in cookies:
+            thread_api_arrays.append((cookie, getReceiveNecklaceCouponSign(receive_key=receive_key_dict[cookie])))
+
+
+    threads = []
+    mask_dict = {}
+    for ck in cookies:
+        mask_dict[ck] = 1
+    for i in range(len(thread_api_arrays)):
+        cookie, api_para = thread_api_arrays[i]
+        threads.append(
+            threading.Thread(target=receiveNecklaceCouponThread,
+                             args=(cookie, api_para, mask_dict, i, len(thread_api_arrays)))
+        )
+
+    printT('Ready for coupons...')
+    jd_timestamp = datetime.datetime.fromtimestamp(jdTime() / 1000)
+
+    printT(f"Server delay (JD server - current server): {(jd_timestamp - datetime.datetime.now()).total_seconds()}s.")
+    if not is_23_hour:
+        # Debug: 测试时关闭
+        if not is_debug:
+            nex_hour = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+        else:
+            nex_hour = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
+        waiting_time = (nex_hour - jd_timestamp).total_seconds()
+        printT(f"Waiting {waiting_time}s...")
+        # waiting_delta = 0.26
+        time.sleep(max(waiting_time - waiting_delta, 0))
+
+    # mask_dict = multiprocessing.Manager().dict()
+    # for ck in cookies:
+    #     mask_dict[ck] = 1
+    # receiveNecklaceCouponWithLoop(cookies, api_dict, loop_time, 0, process_number)
+    # pool = multiprocessing.Pool(processes=process_number)
+    # for i in range(process_number):
+    #     cookies.insert(0, cookies.pop())
+    #     pool.apply_async(receiveNecklaceCouponWithLoop,
+    #                      args=(cookies.copy(), api_dict, loop_time, mask_dict, i, process_number,))
+    #     time.sleep(0.08)
+    # pool.close()
+    # pool.join()
+
+    for t in threads:
+        t.start()
+        time.sleep(sleep_time)
+    for t in threads:
+        t.join()
+
+    # update database
+    print()
+    # 将为False的ck更新为负值
+    for ck, state in mask_dict.items():
+        if state <= 0:
+            database.insertItem(ck, time.time(), today_week_str, state)
+        # else:
+        # 当前尚未抢到时，次数+1，state为0时说明不足，不自增
+        database.addTimes(ck, today_week_str)
+
+    print()
+    # 将为False的ck更新为负值
+    for ck, state in mask_dict.items():
+        if state == -1:
+            print(f"User: {getUserName(ck)} 抢到优惠券")
+        elif state == 0:
+            print(f"User: {getUserName(ck)} 点点券不足")
+        elif state == -2:
+            print(f"User: {getUserName(ck)} ck过期")
+
+    print('\nDatabase after updating：')
+    database.printAllItems()
+    database.close()
+
+    printT("Ending...")
 
 if __name__ == '__main__':
     # freeze_support()
     # exchangeV2(batch_size=3, waiting_delta=0.23)
     # exchange(batch_size=3, waiting_delta=0.23, process_number=4)
-    exchange(batch_size=3, waiting_delta=0.45, process_number=4)
+    # exchange(batch_size=3, waiting_delta=0.45, process_number=4)
+
+    exchangeV3(batch_size=4, waiting_delta=0.45, loop_times=4, sleep_time=0.04)
