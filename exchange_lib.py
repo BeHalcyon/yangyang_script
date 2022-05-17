@@ -850,7 +850,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
 
     # 19:59时延迟巨大。。。
     if datetime.datetime.now().strftime('%H') == '19':
-        waiting_delta += 0.2
+        waiting_delta += 0.1
 
     # logs的mask
     # logs_mask_dict = multiprocessing.Manager().dict()
