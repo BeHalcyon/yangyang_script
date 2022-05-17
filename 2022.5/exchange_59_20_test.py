@@ -613,8 +613,7 @@ def exchangeV2(batch_size=4, waiting_delta=0.26):
 
 # 多进程改为多线程
 def exchangeV3(batch_size=4, waiting_delta=0.26, loop_times=4, sleep_time=0.03):
-    # TODO DEBUG
-    is_debug = True
+    is_debug = False
 
     printT("Starting..." + (" (Debug Mode)" if is_debug else ""))
 
