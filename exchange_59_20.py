@@ -387,7 +387,18 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
         waiting_time = (nex_hour - jd_timestamp).total_seconds()
         printT(f"Waiting to 00:00, waiting {waiting_time}s...")
         time.sleep(max(waiting_time - 0.01, 0))
-
+        
+        cur_index = 0
+        while cur_index < 200:
+            receive_key_dict = {}
+            getCcFeedInfo(cookies[-1], receive_key_dict)
+            if len(receive_key_dict[cookies[-1]]):
+                printT("Find receive key. Continuing...")
+                break
+            else:
+                printT("No receive key found. Waiting 3s...")
+                time.sleep(3000)
+            cur_index += 1
 
     # get receive key
     print()
