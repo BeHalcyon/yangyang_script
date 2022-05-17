@@ -806,4 +806,4 @@ if __name__ == '__main__':
     # exchange(batch_size=3, waiting_delta=0.23, process_number=4)
     # exchange(batch_size=3, waiting_delta=0.45, process_number=4)
 
-    exchangeV3(batch_size=4, waiting_delta=0.45, loop_times=4, sleep_time=0.04)
+    exchangeV3(batch_size=3, waiting_delta=0.4, loop_times=4, sleep_time=0.025)
