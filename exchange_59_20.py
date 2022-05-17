@@ -451,7 +451,7 @@ def exchange(batch_size=4, waiting_delta=0.26, process_number=4):
     for i in range(process_number):
         cookies.insert(0, cookies.pop())
         pool.apply_async(receiveNecklaceCouponWithLoop, args=(cookies.copy(), api_dict, loop_time, mask_dict, i, process_number, ))
-        time.sleep(0.1)
+        time.sleep(0.08)
     pool.close()
     pool.join()
 
@@ -554,4 +554,4 @@ if __name__ == '__main__':
     # freeze_support()
     # exchangeV2(batch_size=3, waiting_delta=0.23)
     # exchange(batch_size=3, waiting_delta=0.23, process_number=4)
-    exchange(batch_size=3, waiting_delta=0.33, process_number=4)
+    exchange(batch_size=3, waiting_delta=0.45, process_number=4)
