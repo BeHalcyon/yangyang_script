@@ -134,12 +134,18 @@ def getCcFeedInfo(cookie, receive_dict):
         res = requests.post(url=url, headers=headers, data=result, timeout=30).json()
 
         if res['code'] == '0':
+            if 'result' in res and 'couponList' in res['result']:
+                for coupon in res['result']['couponList']:
+                    if coupon['title'] != None and '每周可领一次' in coupon['title']:
+                        receiveKey = coupon['receiveKey']
+                        receive_dict[cookie] = receiveKey
+                        return receiveKey
             # return res['result']['couponList'][0]['receiveKey']
-            for coupon in res['result']['couponList']:
-                if coupon['title'] != None and '每周可领一次' in coupon['title']:
-                    receiveKey = coupon['receiveKey']
-                    receive_dict[cookie] = receiveKey
-                    return receiveKey
+            # for coupon in res['result']['couponList']:
+            #     if coupon['title'] != None and '每周可领一次' in coupon['title']:
+            #         receiveKey = coupon['receiveKey']
+            #         receive_dict[cookie] = receiveKey
+            #         return receiveKey
             print('没有找到59-20券的receiveKey')
             receive_dict[cookie] = ""
             return -1
