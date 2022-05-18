@@ -340,17 +340,18 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
     res = requests.post(url=url, headers=headers, data=body).json()
     try:
         if res['code'] == '0' and res['msg'] == '响应成功':
-            if res['result']['optCode'] == '9000':
-                desc = res['result']['desc']
-                quota = res['result']['couponInfoList'][0]['quota']
-                discount = res['result']['couponInfoList'][0]['discount']
-                endTime = res['result']['couponInfoList'][0]['endTime']
-                timeStamp = int(endTime) / 1000
-                timeArray = time.localtime(timeStamp)
-                otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
-                target_info = f'{desc}，满{quota}减{discount}({otherStyleTime}过期)'
-            else:
-                target_info = res['result']['desc']
+            target_info = res['result']['desc']
+            # if res['result']['optCode'] == '9000':
+            #     desc = res['result']['desc']
+            #     quota = res['result']['couponInfoList'][0]['quota']
+            #     discount = res['result']['couponInfoList'][0]['discount']
+            #     endTime = res['result']['couponInfoList'][0]['endTime']
+            #     timeStamp = int(endTime) / 1000
+            #     timeArray = time.localtime(timeStamp)
+            #     otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
+            #     target_info = f'{desc}，满{quota}减{discount}({otherStyleTime}过期)'
+            # else:
+            #     target_info = res['result']['desc']
         else:
             target_info = res['msg']
         printT(prefix_info + target_info)
@@ -806,4 +807,8 @@ if __name__ == '__main__':
     # exchange(batch_size=3, waiting_delta=0.23, process_number=4)
     # exchange(batch_size=3, waiting_delta=0.45, process_number=4)
 
+    # 20220518 抢到3，会火爆，说明间隔可以。
     exchangeV3(batch_size=3, waiting_delta=0.4, loop_times=4, sleep_time=0.025)
+
+    # 20220518 降低间隔可能好些
+    # exchangeV3(batch_size=3, waiting_delta=0.45, loop_times=4, sleep_time=0.06)
