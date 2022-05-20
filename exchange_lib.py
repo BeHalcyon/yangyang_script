@@ -736,7 +736,7 @@ def generateBody(body_dict, log_dict):
                       ).replace(' ', '')
     return f"body={parse.quote(body)}"
 
-def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_dict = {}, batch_size=4, other_batch_size=4, waiting_delta=0.3, process_number=4):
+def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_dict = {}, batch_size=4, other_batch_size=4, waiting_delta=0.3, process_number=4, coupon_type="15-8"):
     debug_flag = False
 
     requests.packages.urllib3.disable_warnings()
