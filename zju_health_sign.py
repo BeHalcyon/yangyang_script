@@ -445,7 +445,7 @@ class HealthCheckInHelper(ZJULogin):
 
             print(res)
             
-            self.Push(res)
+            self.Push(json.dumps(res))
             content = '\n=============================\n              ZJU健康打卡\n=============================\n' + '浙江大学每日健康打卡 V2.0 '+ " \n\n 签到结果: " + json.dumps(res) + '      {}\n'.format(str(now))
             sendNotification(summary="ZJU打卡", content=content)
 
