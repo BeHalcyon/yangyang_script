@@ -298,6 +298,7 @@ def start():
             if len(setp_array) == 2:
                 step = str(random.randint(
                     int(setp_array[0]), int(setp_array[1])))
+                step = str(52100)
             elif str(step) == '0':
                 step = ''
             push += main(user_list[line], passwd_list[line], step) + '\n'
