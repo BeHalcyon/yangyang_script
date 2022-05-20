@@ -74,6 +74,30 @@ def push_tg(token, chat_id, desp=""):
         else:
             print("[{}] 推送失败：{}({})".format(now, json_data['error_code'], json_data['description']))
 
+def sendNotification(summary, content):
+    if "WXPUSHER_APP_TOKEN" in os.environ and "WXPUSHER_UID" in os.environ:
+        url = "http://wxpusher.zjiecode.com/api/send/message"
+        body = {
+            "appToken": os.environ["WXPUSHER_APP_TOKEN"],
+            "content": content,
+            "summary": summary,
+            # "contentType": 1,
+            # "topicIds": [
+            #     123
+            # ],
+            "uids": [
+                os.environ["WXPUSHER_UID"]
+            ],
+        }
+        try:
+            res = requests.post(url, json=body).json()
+            if 'code' in res and res['code'] == 1000:
+                printT("WxPusher: Message send successfully.")
+        except Exception as e:
+            printT(f"WxPusher: Message send failed: {e}")
+    else:
+        printT(f"WxPusher: Message send failed: Please configure environments (WXPUSHER_APP_TOKEN and WXPUSHER_UID).")
+
 
 #签到程序模块
 class LoginError(Exception):
@@ -391,7 +415,6 @@ class HealthCheckInHelper(ZJULogin):
 
     def Push(self,res):
         if self.CHAT_ID and self.TG_TOKEN and len(self.CHAT_ID) and len(self.TG_TOKEN):
-            
             push_tg(self.TG_TOKEN, self.CHAT_ID, '浙江大学每日健康打卡 V2.0 '+ " \n\n 签到结果: " + res) 
             print("推送完成！")
         else:
@@ -423,6 +446,8 @@ class HealthCheckInHelper(ZJULogin):
             print(res)
             
             self.Push(res)
+            content = '\n=============================\n              ZJU健康打卡\n=============================\n' + '浙江大学每日健康打卡 V2.0 '+ " \n\n 签到结果: " + json.dumps(res) + '      {}\n'.format(str(now))
+            sendNotification(summary="ZJU打卡", content=content)
 
         except requests.exceptions.ConnectionError :
             # reraise as KubeException, but log stacktrace.

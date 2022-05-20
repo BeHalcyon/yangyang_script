@@ -938,6 +938,7 @@ def exchange0Clock(batch_size=4, waiting_delta=0, loop_times=1, sleep_time=0.03)
 
     printT("Ending...")
 
+
 if __name__ == '__main__':
     # freeze_support()
     # exchangeV2(batch_size=3, waiting_delta=0.23)
