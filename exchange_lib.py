@@ -16,6 +16,31 @@ import os
 import collections
 from urllib import parse
 
+def sendNotification(summary, content):
+    if "WXPUSHER_APP_TOKEN" in os.environ and "WXPUSHER_UID" in os.environ:
+        url = "http://wxpusher.zjiecode.com/api/send/message"
+        body = {
+            "appToken": os.environ["WXPUSHER_APP_TOKEN"],
+            "content": content,
+            "summary": summary,
+            # "contentType": 1,
+            # "topicIds": [
+            #     123
+            # ],
+            "uids": [
+                os.environ["WXPUSHER_UID"]
+            ],
+        }
+        try:
+            res = requests.post(url, json=body).json()
+            if 'code' in res and res['code'] == 1000:
+                printT("WxPusher: Message send successfully.")
+        except Exception as e:
+            printT(f"WxPusher: Message send failed: {e}")
+    else:
+        printT(f"WxPusher: Message send failed: Please configure environments (WXPUSHER_APP_TOKEN and WXPUSHER_UID).")
+
+
 def printT(s):
     print("[{0}]: {1}".format(datetime.datetime.now(), s), flush=True)
     # print("[{0}]: {1}".format(datetime.datetime.now(), s))
@@ -909,7 +934,7 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
 
     database.close()
 
-def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_with_logs_file="./logs", batch_size=5, waiting_delta=0.3):
+def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_with_logs_file="./logs", batch_size=5, waiting_delta=0.3, coupon_type=None):
 
     # 读取具有body的log文件
     # log_process = LogProcess(body_with_logs_file)
@@ -1060,6 +1085,10 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
 
     print()
 
+    summary = f"Coupon ({coupon_type})"
+    content = ""
+    
+
     # 将为False的ck更新为负值
     for ck, state in mask_dict.items():
         if state <= 0:
@@ -1069,6 +1098,10 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
         database.addTimes(ck, str(datetime.date.today()))
         if state == -1:
             print(f"账号：{getUserName(ck)} 抢到优惠券")
+            content += f"账号：{getUserName(ck)} 抢到优惠券\n"
+    
+    if len(coupon_type):
+        sendNotification(summary=summary, content=content)
 
     print('\n更新后数据库如下：')
     database.printTodayItems()
