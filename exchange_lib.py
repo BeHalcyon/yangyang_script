@@ -919,6 +919,18 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
 
     print()
 
+    # # 将为False的ck更新为负值
+    # for ck, state in mask_dict.items():
+    #     if state <= 0:
+    #         database.insertItem(ck, time.time(), str(datetime.date.today()), state)
+    #     # else:
+    #         # 当前尚未抢到时，权重+1，state为0时说明火爆，不自增
+    #     database.addTimes(ck, str(datetime.date.today()))
+    #     if state == -1:
+    #         print(f"账号：{getUserName(ck)} 抢到优惠券")
+
+    summary = f"Coupon ({coupon_type})"
+    content = ""
     # 将为False的ck更新为负值
     for ck, state in mask_dict.items():
         if state <= 0:
@@ -928,6 +940,12 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
         database.addTimes(ck, str(datetime.date.today()))
         if state == -1:
             print(f"账号：{getUserName(ck)} 抢到优惠券")
+            content += f"账号：{getUserName(ck)} 抢到优惠券\n"
+    
+    if len(coupon_type):
+        sendNotification(summary=summary, content=content)
+
+
 
     print('\n更新后数据库如下：')
     database.printTodayItems()

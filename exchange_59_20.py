@@ -790,14 +790,35 @@ def exchangeV3(batch_size=4, waiting_delta=0.26, loop_times=4, sleep_time=0.03):
         database.addTimes(ck, today_week_str)
 
     print()
+    # # 将为False的ck更新为负值
+    # for ck, state in mask_dict.items():
+    #     if state == -1:
+    #         print(f"User: {getUserName(ck)} 抢到优惠券")
+    #     elif state == 0:
+    #         print(f"User: {getUserName(ck)} 点点券不足")
+    #     elif state == -2:
+    #         print(f"User: {getUserName(ck)} ck过期")
+
+    summary = "Coupon (59 - 20)"
+    content = ""
+    print()
     # 将为False的ck更新为负值
     for ck, state in mask_dict.items():
         if state == -1:
             print(f"User: {getUserName(ck)} 抢到优惠券")
+            content += f"User: {getUserName(ck)} 抢到优惠券！\n"
         elif state == 0:
             print(f"User: {getUserName(ck)} 点点券不足")
+            content += f"User: {getUserName(ck)} 点点券不足！\n"
         elif state == -2:
             print(f"User: {getUserName(ck)} ck过期")
+            content += f"User: {getUserName(ck)} ck过期！\n"
+        else:
+            print(f"User: {getUserName(ck)} 未抢到")
+            content += f"User: {getUserName(ck)} 未抢到！\n"
+
+    sendNotification(summary=summary, content=content)
+
 
     print('\nDatabase after updating：')
     database.printAllItems()
@@ -923,14 +944,35 @@ def exchange0Clock(batch_size=4, waiting_delta=0, loop_times=1, sleep_time=0.03)
         database.addTimes(ck, today_week_str)
 
     print()
+    # # 将为False的ck更新为负值
+    # for ck, state in mask_dict.items():
+    #     if state == -1:
+    #         print(f"User: {getUserName(ck)} 抢到优惠券")
+    #     elif state == 0:
+    #         print(f"User: {getUserName(ck)} 点点券不足")
+    #     elif state == -2:
+    #         print(f"User: {getUserName(ck)} ck过期")
+
+    summary = "Coupon (59 - 20)"
+    content = ""
+    print()
     # 将为False的ck更新为负值
     for ck, state in mask_dict.items():
         if state == -1:
             print(f"User: {getUserName(ck)} 抢到优惠券")
+            content += f"User: {getUserName(ck)} 抢到优惠券！\n"
         elif state == 0:
             print(f"User: {getUserName(ck)} 点点券不足")
+            content += f"User: {getUserName(ck)} 点点券不足！\n"
         elif state == -2:
             print(f"User: {getUserName(ck)} ck过期")
+            content += f"User: {getUserName(ck)} ck过期！\n"
+        else:
+            print(f"User: {getUserName(ck)} 未抢到")
+            content += f"User: {getUserName(ck)} 未抢到！\n"
+
+    sendNotification(summary=summary, content=content)
+
 
     print('\nDatabase after updating：')
     database.printAllItems()
