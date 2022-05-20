@@ -954,7 +954,7 @@ if __name__ == '__main__':
 
     cur_hour = datetime.datetime.now().strftime('%H')
     if cur_hour != "23":
-        exchangeV3(batch_size=3, waiting_delta=0.4, loop_times=4, sleep_time=0.025)
+        exchangeV3(batch_size=3, waiting_delta=0.4, loop_times=4, sleep_time=0.035)
     else:
         # 0点场，每个线程负责一个号。
         exchange0Clock(batch_size=6, waiting_delta=1, loop_times=1, sleep_time=0.03)
