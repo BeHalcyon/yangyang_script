@@ -17,36 +17,36 @@ import datetime
 import time
 import os
 import random
-import ddddocr
+# import ddddocr
 
-class getcode():
+# class getcode():
 
-    def __init__(self,res):
-        self.res = res
+#     def __init__(self,res):
+#         self.res = res
     
-    def get_photo(self):
-        try:
-            with open('./img/verify.png', 'wb') as f:
-                f.write(self.res)
-            return True
+#     def get_photo(self):
+#         try:
+#             with open('./img/verify.png', 'wb') as f:
+#                 f.write(self.res)
+#             return True
 
-        except Exception as e:
-            print(e)
-            return False
+#         except Exception as e:
+#             print(e)
+#             return False
 
-    def parse(self):
-        ocr = ddddocr.DdddOcr(show_ad=False,old=True)
-        with open('./img/verify.png', 'rb') as f:
-            image = f.read()
-        res = ocr.classification(image)
-        print('验证码识别结果：',res)
-        return res
+#     def parse(self):
+#         ocr = ddddocr.DdddOcr(show_ad=False,old=True)
+#         with open('./img/verify.png', 'rb') as f:
+#             image = f.read()
+#         res = ocr.classification(image)
+#         print('验证码识别结果：',res)
+#         return res
     
-    def main(self):
-        if self.get_photo():
-            return self.parse()
-        else:
-            return False
+#     def main(self):
+#         if self.get_photo():
+#             return self.parse()
+#         else:
+#             return False
 # 推送tg
 def push_tg(token, chat_id, desp=""):
     now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -243,17 +243,17 @@ class HealthCheckInHelper(ZJULogin):
         try:
             done = re.findall('温馨提示： 不外出、不聚集、不吃野味， 戴口罩、勤洗手、咳嗽有礼，开窗通风，发热就诊',html)[0]
             print(done)
-            try:
-                res = self.sess.get(self.imgaddress, headers=self.headers)
-                code_get = getcode(res.content)
-                code = code_get.main()
-                if not code :
-                    self.Push('验证码识别失败，请重试')
-                    return
-                else:
-                    self.Push('验证码识别成功，请稍后')
-            except:
-                print('验证码识别失败')
+            # try:
+            #     res = self.sess.get(self.imgaddress, headers=self.headers)
+            #     code_get = getcode(res.content)
+            #     code = code_get.main()
+            #     if not code :
+            #         self.Push('验证码识别失败，请重试')
+            #         return
+            #     else:
+            #         self.Push('验证码识别成功，请稍后')
+            # except:
+            #     print('验证码识别失败')
         except:
             print('打卡网页获取失败')
             self.Push('打卡网页获取失败')
@@ -379,9 +379,9 @@ class HealthCheckInHelper(ZJULogin):
                 'szsqsfybl':'0',
                 'gwszgz':'',
                 'campus': '紫金港校区', # 紫金港校区 玉泉校区 西溪校区 华家池校区 之江校区 海宁校区 舟山校区 宁波校区 工程师学院 杭州国际科创中心 其他
-                # 👇-----2022.5.7日修改-----👇
-                'verifyCode': code,
-                # 👆-----2022.5.7日修改-----👆
+                # 👇-----2022.5.19日修改-----👇
+                'verifyCode': ''  ,
+                # 👆-----2022.5.19日修改-----👆
             }
             data.update(verify_code)
             response = self.sess.post('https://healthreport.zju.edu.cn/ncov/wap/default/save', data=data,
