@@ -959,8 +959,8 @@ def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functio
         sendNotification(summary=summary, content=content)
 
 
-    print('\n更新后数据库如下：')
-    database.printTodayItems()
+    # print('\n更新后数据库如下：')
+    # database.printTodayItems()
 
     database.close()
 
