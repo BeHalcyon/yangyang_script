@@ -575,19 +575,26 @@ class SQLProcess:
             print(f"{item[1] if len(item[1]) < 30 else item[1][::50][::-1][:50]}\t{item[2]}")
 
     def printTodayItems(self):
-        self.printAllItems(str(datetime.date.today()))
+        return self.printAllItems(str(datetime.date.today()))
     
     def printAllItems(self, year_month_day = None):
+        res = ""
         if year_month_day is None:
             print(f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times")
+            res += f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times\n"
             self.c.execute(f"SELECT * FROM {self.table_name}")
             for item in self.c.fetchall():
                 print(f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}")
+                if int(item[3]) == -1:
+                    res += f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}\n"
         else:
             print(f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times")
+            res += f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times\n"
             self.c.execute(f"SELECT * FROM {self.table_name} WHERE DATE = '{year_month_day}'")
             for item in self.c.fetchall():
                 print(f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}")
+                res += f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}\n"
+        return res
         
     def getAllUsers(self, year_month_day = str(datetime.date.today())):
         res = []
@@ -1115,14 +1122,16 @@ def exchangeCouponsMayMonth(header='https://api.m.jd.com/client.action?functionI
             # 当前尚未抢到时，权重+1，state为0时说明火爆，不自增
         database.addTimes(ck, str(datetime.date.today()))
         if state == -1:
-            print(f"账号：{getUserName(ck)} 抢到优惠券")
-            content += f"账号：{getUserName(ck)} 抢到优惠券\n"
+            print(f"账号：{getUserName(ck)} 抢到{coupon_type}优惠券")
+            content += f"账号：{getUserName(ck)} 抢到{coupon_type}优惠券\n"
     
+    print('\n更新后数据库如下：')
+    today_information = database.printTodayItems()
+    content += f"\n\n----------------------\n今日抢到{coupon_type}优惠券账号如下：\n" + today_information + "----------------------\n"
+
     if len(coupon_type):
         sendNotification(summary=summary, content=content)
 
-    print('\n更新后数据库如下：')
-    database.printTodayItems()
 
     database.close()
 
