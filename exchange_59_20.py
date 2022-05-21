@@ -971,11 +971,14 @@ def exchange0Clock(batch_size=4, waiting_delta=0, loop_times=1, sleep_time=0.03)
             print(f"User: {getUserName(ck)} 未抢到")
             content += f"User: {getUserName(ck)} 未抢到！\n"
 
+
+    print('\nDatabase after updating：')
+    current_information = database.printAllItems()
+    content += f"\n\n----------------------\n本周抢到59-20优惠券账号如下：\n-1表示已抢到\n-2表示账号过期\n0表示点点券不足\n----------------------\n" + current_information + "----------------------\n"
+
     sendNotification(summary=summary, content=content)
 
 
-    print('\nDatabase after updating：')
-    database.printAllItems()
     database.close()
 
     printT("Ending...")
