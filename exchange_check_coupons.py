@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     summary = "优惠券速览"
     content = ""
-    for cookie in cookies[notification_length:]:
+    for cookie in random.shuffle(cookies[notification_length:]):
         content += findCoupons(cookie)
     print(content)
     sendNotification(summary=summary, content=content)
