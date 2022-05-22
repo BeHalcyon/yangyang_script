@@ -57,7 +57,7 @@ def findCoupons(cookie):
             "coupon_type": "京东"
         }
     }
-
+    
     url = f"https://wq.jd.com/activeapi/queryjdcouponlistwithfinance?state={1}&wxadd=1&filterswitch=1&_={int(time.time()*1000)}&sceneval=2&g_login_type=1&callback=jsonpCBKB&g_ty=ls"
     headers = {
       'authority': 'wq.jd.com',
