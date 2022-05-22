@@ -75,6 +75,7 @@ def findCoupons(cookie):
     next_day_timestamp = int(time.mktime(next_day.timetuple()) * 1000)
 
     for current_coupon in coupon_list:
+        # print(current_coupon)
         for coupon_name, coupon_info in coupon_dict.items():
             if coupon_name in current_coupon['couponTitle']:
                 coupon_dict[coupon_name]['coupon_number'] += 1
@@ -88,12 +89,22 @@ def findCoupons(cookie):
 if __name__ == '__main__':
 
     cookies = os.environ["JD_COOKIE"].split('&') if "JD_COOKIE" in os.environ else []
-    summary = "优惠券速览"
+    notification_length = min(4, len(cookies))
+    first_cookies = cookies[:notification_length]
+    summary = "优惠券速览（我的）"
     content = ""
-    for cookie in cookies:
+    for cookie in cookies[:notification_length]:
         content += findCoupons(cookie)
     print(content)
     sendNotification(summary=summary, content=content)
+
+    summary = "优惠券速览"
+    content = ""
+    for cookie in cookies[notification_length:]:
+        content += findCoupons(cookie)
+    print(content)
+    sendNotification(summary=summary, content=content)
+
 
     printT("通知发送成功")
 
