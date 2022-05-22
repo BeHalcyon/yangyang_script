@@ -355,7 +355,7 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
         printT(prefix_info + target_info)
     except:
         pass
-    if "已经兑换过" in target_info:
+    if "已经兑换过" or "领券成功" in target_info:
         mask_dict[cookie] = -1
     elif "不足" in target_info:
         mask_dict[cookie] = 0

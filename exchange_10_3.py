@@ -18,4 +18,4 @@ body_dict = {
 }
 
 # 优先前4个号，全部抢到后从后面每次执行4个号
-exchangeCouponsMayMonthV2(header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0", body_dict=body_dict, batch_size=4, waiting_delta=0.2, process_number=4)
+exchangeCouponsMayMonthV2(header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0", body_dict=body_dict, batch_size=4, waiting_delta=0.2, process_number=4, coupon_type="10-3")
