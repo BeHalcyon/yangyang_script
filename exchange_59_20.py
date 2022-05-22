@@ -885,10 +885,17 @@ def exchange0Clock(batch_size=4, waiting_delta=0, loop_times=1, sleep_time=0.03)
             'name': "filtered_cks.db"
         }
     # 存入数据库
-    database = SQLProcess("cks_59_20_" + time.strftime("%Y%W"), database_dict)
+    # database = SQLProcess("cks_59_20_" + time.strftime("%Y%W"), database_dict)
+    # # 插入所有数据，如果存在则更新
+    # insert_start = time.time()
+    # today_week_str = time.strftime("%Y-(%W) ")
+    # Debug
+    database = SQLProcess("cks_59_20_" + (datetime.datetime.now() + datetime.timedelta(hours=1)).strftime("%Y%W"), database_dict)
     # 插入所有数据，如果存在则更新
     insert_start = time.time()
-    today_week_str = time.strftime("%Y-(%W) ")
+    # Debug
+    # today_week_str = time.strftime("%Y-(%W) ")
+    today_week_str = (datetime.datetime.now() + datetime.timedelta(hours=1)).strftime("%Y-(%W) ")
     for i, ck in enumerate(cookies):
         database.insertItem(ck, time.time(), today_week_str, len(cookies) - i)
     insert_end = time.time()
