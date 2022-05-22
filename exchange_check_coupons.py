@@ -89,7 +89,7 @@ def findCoupons(cookie):
 if __name__ == '__main__':
 
     cookies = os.environ["JD_COOKIE"].split('&') if "JD_COOKIE" in os.environ else []
-    notification_length = min(4, len(cookies))
+    notification_length = min(5, len(cookies))
     first_cookies = cookies[:notification_length]
     summary = "优惠券速览（我的）"
     content = ""
