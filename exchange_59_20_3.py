@@ -1,20 +1,31 @@
 #!/bin/env python3
 # -*- coding: utf-8 -*
 '''
-项目名称:exchange_59_20_2.py
+项目名称:exchange_59_20_3.py
 Author: yangyang
 功能：
 Date: 2022-5-23
-cron: 5 59 9,13,17,21,23 * * *
-new Env("京东59减20无点点券");
+cron: 0 59 9,13,17,21,23 * * *
+new Env("京东59减20点点券2");
 '''
 
 from exchange_lib import *
 
+def exchangeThread(ck, request_url, mask_dict, thread_id, thread_number):
+    response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'],
+                             data=request_url['body'])
+    result = response.json()
+    result_string = result['result']['floorResult']['biz_msg']
+    printT(
+        f"Thread: {thread_id}/{thread_number}, user：{getUserName(ck)}: {result_string}")
+
+    if "成功" in result_string:
+        mask_dict[ck] = -1
+    elif "不足" in result_string:
+        mask_dict[ck] = 0
 
 
-# 不需要点点券兑换的59-20
-def exchangeWithoutNecklaceCoupon(header='https://api.m.jd.com/client.action?functionId=newBabelAwardCollection&client=wh5&clientVersion=1.0.0',
+def exchangeWithoutSignOrLog(header='https://api.m.jd.com/client.action?functionId=newBabelAwardCollection&client=wh5&clientVersion=1.0.0',
         body={}, batch_size=4, other_batch_size=4, waiting_delta=0.3, sleep_time=0.03, thread_number=4, coupon_type=""):
     # TODO DEBUG
     debug_flag = False
@@ -51,6 +62,7 @@ def exchangeWithoutNecklaceCoupon(header='https://api.m.jd.com/client.action?fun
             'name': "filtered_cks.db"
         }
 
+    # TODO 修改为每周一次
     # 存入数据库
     database = SQLProcess(json.dumps(body).replace('=', '').replace(',', '').replace('{', '').replace('}', '').replace('"', '').replace(' ', '').replace(':', ''), database_dict)
     # 插入所有数据，如果存在则更新
@@ -102,6 +114,7 @@ def exchangeWithoutNecklaceCoupon(header='https://api.m.jd.com/client.action?fun
                 "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
                 "Connection": "keep-alive",
                 "Content-Type": "application/x-www-form-urlencoded",
+                # 'origin': 'https://h5.m.jd.com',
                 'origin': 'https://pro.m.jd.com',
                 "Referer": "https://prodev.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?sid=bf6ae253e73f472d5ec294810f46665w&un_area=7_502_35752_35860",
                 "Cookie": cookies[process_id % len(cookies)],
@@ -170,11 +183,15 @@ def exchangeWithoutNecklaceCoupon(header='https://api.m.jd.com/client.action?fun
 
     database.close()
 
-if __name__ == "__main__":
 
 
-    body_dict = {"activityId":"csTQSAnfQypSN7KeyCwJWthE6aV","from":"H5node","scene":"1","args":"key=m9a6teebr9iaa0lfc4m6sbb4a6351303,roleId=76337067"}
-    exchangeCouponsMayMonthV3(
-        header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0",
-        body_dict=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.25, sleep_time=0.025, thread_number=20,
-        coupon_type="59-20(2)")
+body_dict= {
+    "batchId":"859658610"
+}
+
+waiting_delta = float(os.environ['WAITING_DELTA']) if "WAITING_DELTA" in os.environ else 0.18
+
+# exchangeCouponsMayMonthV3(header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0", body_dict=body_dict, batch_size=5, other_batch_size=2, waiting_delta=0.25, process_number=4, coupon_type="15-8")
+# exchangeWithoutSignOrLog(header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0", body_dict=body_dict, batch_size=10, other_batch_size=5, waiting_delta=0.25, sleep_time=0.03, thread_number=20, coupon_type="15-8")
+exchangeWithoutSignOrLog(header="https://api.m.jd.com/client.action?functionId=volley_ExchangeAssetFloorForColor&appid=coupon-activity&client=wh5&area=17_1381_50718_53772&geo=%5Bobject%20Object%5D&t=1653322985601&eu=5663338346331693&fv=9323932366232313",
+                         body=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.25, sleep_time=0.03, thread_number=20, coupon_type="59-20(3)")
