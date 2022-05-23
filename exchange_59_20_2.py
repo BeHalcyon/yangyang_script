@@ -17,7 +17,7 @@ from exchange_lib import *
 def exchangeWithoutNecklaceCoupon(header='https://api.m.jd.com/client.action?functionId=newBabelAwardCollection&client=wh5&clientVersion=1.0.0',
         body={}, batch_size=4, other_batch_size=4, waiting_delta=0.3, sleep_time=0.03, thread_number=4, coupon_type=""):
     # TODO DEBUG
-    debug_flag = True
+    debug_flag = False
 
     requests.packages.urllib3.disable_warnings()
 
@@ -29,14 +29,7 @@ def exchangeWithoutNecklaceCoupon(header='https://api.m.jd.com/client.action?fun
     sid_ck = ''.join(
         random.sample('123456789abcdef123456789abcdef123456789abcdef123456789abcdefABCDEFGHIJKLMNOPQRSTUVWXYZ', 43))
 
-    if debug_flag:
-        cookies = ["pt_key=AAJiapGZADAj8FFb7WrzWGW9B5d11XYF8U-NUKQg4TdGydjHUKdfFcWM5vCzFfPST2QTkQbNR5Q;pt_pin=jd_53aa3f2579461;",
-                   "pt_key=AAJiaoeQADBW8pF6NwpJKWrJA39aie8hI8semn2SV4s8fcBvDfMmd_hxP8tiHqtsh9S03vqV-Oo;pt_pin=jd_tIxKpKBLwQtJ;",
-                   "pt_key=AAJiaoeQADBW8pF6NwpJKWrJA39aie8hI8semn2SV4s8fcBvDfMmd_hxP8tiHqtsh9S03vqV-Oo;pt_pin=jd_tIxKpKBLwQtJ;",
-                   "pt_key=AAJie0SUADAfDWae9f5nzapCmXN539rUIYKTHvzjbTazY3oQ92cYjnL2LSi0dTLupZ5UVEb9064;pt_pin=jd_7f4f655edb984;",
-                   "pt_key=AAJiZOPOADCzXELKguL5uIuqzhb0hDmmMe0gtwGzi2wcraYyBlIOgTgSPhs8EvCOsb-KLVGt6Bc;pt_pin=SSS194911;"]
-    else:
-        cookies = os.environ["JD_COOKIE"].split('&')
+    cookies = os.environ["JD_COOKIE"].split('&')
 
     if 'DATABASE_TYPE' in os.environ and \
             'DATABASE_HOST' in os.environ and \
@@ -183,5 +176,5 @@ if __name__ == "__main__":
     body_dict = {"activityId":"csTQSAnfQypSN7KeyCwJWthE6aV","from":"H5node","scene":"1","args":"key=m9a6teebr9iaa0lfc4m6sbb4a6351303,roleId=76337067"}
     exchangeCouponsMayMonthV3(
         header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0",
-        body_dict=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.25, sleep_time=0.03, thread_number=20,
+        body_dict=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.25, sleep_time=0.025, thread_number=20,
         coupon_type="59-20(2)")
