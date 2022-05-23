@@ -194,4 +194,4 @@ waiting_delta = float(os.environ['WAITING_DELTA']) if "WAITING_DELTA" in os.envi
 # exchangeCouponsMayMonthV3(header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0", body_dict=body_dict, batch_size=5, other_batch_size=2, waiting_delta=0.25, process_number=4, coupon_type="15-8")
 # exchangeWithoutSignOrLog(header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0", body_dict=body_dict, batch_size=10, other_batch_size=5, waiting_delta=0.25, sleep_time=0.03, thread_number=20, coupon_type="15-8")
 exchangeWithoutSignOrLog(header="https://api.m.jd.com/client.action?functionId=volley_ExchangeAssetFloorForColor&appid=coupon-activity&client=wh5&area=17_1381_50718_53772&geo=%5Bobject%20Object%5D&t=1653322985601&eu=5663338346331693&fv=9323932366232313",
-                         body=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.25, sleep_time=0.03, thread_number=20, coupon_type="59-20(3)")
+                         body=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.33, sleep_time=0.03, thread_number=20, coupon_type="59-20(3)")

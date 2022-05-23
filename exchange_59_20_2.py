@@ -176,5 +176,5 @@ if __name__ == "__main__":
     body_dict = {"activityId":"csTQSAnfQypSN7KeyCwJWthE6aV","from":"H5node","scene":"1","args":"key=m9a6teebr9iaa0lfc4m6sbb4a6351303,roleId=76337067"}
     exchangeCouponsMayMonthV3(
         header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0",
-        body_dict=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.25, sleep_time=0.025, thread_number=20,
+        body_dict=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.33, sleep_time=0.025, thread_number=20,
         coupon_type="59-20(2)")
