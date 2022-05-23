@@ -1565,17 +1565,9 @@ def exchangePayCoupon(header='https://api.m.jd.com/client.action?functionId=newB
     print('\nThe database before updating: ')
     database.printTodayItems()
 
-    # 可修订仓库batch size，非零点抢券时更新
-    if datetime.datetime.now().strftime('%H') != '23':
-        # cookies, visit_times = database.filterUsers(batch_size)
-        # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
-        cookies, visit_times = database.filterUsersWithPriorityLimited(user_number=other_batch_size,
-                                                                       year_month_day=str(datetime.date.today()),
-                                                                       priority_number=batch_size)
-    # 23点只提前batch_size个
-    else:
-        cookies = cookies[:min(batch_size, len(cookies))]
-        visit_times = []
+
+    cookies = cookies[:min(batch_size, len(cookies))]
+    visit_times = []
 
     # 每个线程每个账号循环次数
     if len(cookies) == 0:
