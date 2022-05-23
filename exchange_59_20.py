@@ -341,7 +341,7 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
             target_info = res['result']['desc']
             if "不足" in target_info:
                 mask_dict[cookie] = 0
-            elif "已经兑换过" or "领券" in target_info: # "领券成功" 貌似有bug
+            elif "已经兑换过" in target_info or "领券成功" in target_info: # "领券成功" 貌似有bug
                 mask_dict[cookie] = -1
             elif "未登录" in target_info:
                 mask_dict[cookie] = -2
@@ -827,8 +827,8 @@ def exchangeV3(batch_size=4, waiting_delta=0.26, loop_times=4, sleep_time=0.03):
 
 
 
-    print('\nDatabase after updating：')
-    database.printAllItems()
+    # print('\nDatabase after updating：')
+    # database.printAllItems()
     database.close()
 
     printT("Ending...")

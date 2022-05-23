@@ -422,7 +422,7 @@ class SQLProcess:
         # 时间戳为primary key，不更新，ck动态更新，因为会失效
         # 优先级大于0时可以更新，但只更新权重
         # 等于0的也更新
-        if priority >= 0:
+        if priority > 0:
             self.c.execute(f'''
                             UPDATE {self.table_name} SET 
                             USER_NAME='{user_name}',
