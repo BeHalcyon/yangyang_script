@@ -339,6 +339,12 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
     try:
         if res['code'] == '0' and res['msg'] == '响应成功':
             target_info = res['result']['desc']
+            if "不足" in target_info:
+                mask_dict[cookie] = 0
+            elif "已经兑换过" in target_info: # "领券成功" 貌似有bug
+                mask_dict[cookie] = -1
+            elif "未登录" in target_info:
+                mask_dict[cookie] = -2
             # if res['result']['optCode'] == '9000':
             #     desc = res['result']['desc']
             #     quota = res['result']['couponInfoList'][0]['quota']
@@ -355,12 +361,7 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
         printT(prefix_info + target_info)
     except:
         pass
-    if "已经兑换过" or "领券成功" in target_info:
-        mask_dict[cookie] = -1
-    elif "不足" in target_info:
-        mask_dict[cookie] = 0
-    elif "未登录" in target_info:
-        mask_dict[cookie] = -2
+
 
 
 # jd的服务器时间
@@ -1013,7 +1014,7 @@ if __name__ == '__main__':
 
     cur_hour = datetime.datetime.now().strftime('%H')
     if cur_hour != "23":
-        exchangeV3(batch_size=3, waiting_delta=0.4, loop_times=4, sleep_time=0.035)
+        exchangeV3(batch_size=3, waiting_delta=0.3, loop_times=4, sleep_time=0.035)
     else:
         # 0点场，每个线程负责一个号。
         exchange0Clock(batch_size=6, waiting_delta=1, loop_times=1, sleep_time=0.03)
