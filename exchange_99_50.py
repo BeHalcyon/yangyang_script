@@ -36,4 +36,4 @@ body = {"activityId":"27ymdYiFp6M7sA1WkbULRVuERRbX",
         }
 
 
-exchangePayCoupon(header="https://api.m.jd.com/client.action?functionId=newBabelAwardCollection&screen=800*1324&client=wh5&clientVersion=1.0.0", body=body, batch_size=10, other_batch_size=5, waiting_delta=0.25, sleep_time=0.3, thread_number=20, coupon_type="99-50")
+exchangePayCoupon(header="https://api.m.jd.com/client.action?functionId=newBabelAwardCollection&screen=800*1324&client=wh5&clientVersion=1.0.0", body=body, batch_size=6, other_batch_size=5, waiting_delta=0.25, sleep_time=0.3, thread_number=20, coupon_type="99-50")
