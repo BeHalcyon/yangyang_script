@@ -300,6 +300,8 @@ def start():
                     int(setp_array[0]), int(setp_array[1])))
             elif str(step) == '0':
                 step = ''
+            if user_list[line] == '16638143970':
+                step = str(random.randint(10000,15000))
             push += main(user_list[line], passwd_list[line], step) + '\n'
             desp += '账号{}：{} 步数：{}\n'.format(line+1, user_list[line], step)
         try:
