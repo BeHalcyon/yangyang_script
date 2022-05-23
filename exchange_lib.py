@@ -735,6 +735,44 @@ def exchange(process_id, cks, loop_times, request_url_dict, mask_dict):
         if flag:
             break
 
+def exchangeThread(cookie, request_url, mask_dict, thread_id, thread_number):
+    # 当前时间段抢空；；活动结束了
+    # process_stop_code_set = set(['D2', 'A15', 'A6'])
+    # if datetime.datetime.now().strftime('%H') != '23':
+    #     process_stop_code_set.add('A14')  # 今日没了
+    ck = cookie
+
+    response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'],
+                             data=request_url['body'])
+    result = response.json()
+    printT(
+        f"Thread: {thread_id}/{thread_number}, user：{getUserName(ck)}: {result['subCode'] + ' : ' + result['subCodeMsg'] if 'subCodeMsg' in result.keys() else result}")
+    # if 'subCode' in result.keys() and (result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25'): # 当前时间段抢空；今日没了；火爆了
+    # # if 'subCode' in result.keys() and (result['subCode'] == 'A14' or result['subCode'] == 'A25'): # 今日没了；火爆了
+    #     flag = True
+    #     break
+    if 'subCode' in result.keys():
+        # if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A25': # 当前时间段抢空；今日没了；火爆了
+        # if result['subCode'] in process_stop_code_set:
+        #     # if result['subCode'] == 'D2' or result['subCode'] == 'A14' or result['subCode'] == 'A15' or result['subCode'] == 'A6': # 当前时间段抢空；今日没了；；活动结束了
+        #     # 直接停止该线程
+        #     msg("停止所有进程...")
+        #     flag = True
+        #     break
+        if result['subCode'] == 'A1' or result['subCode'] == 'A13':  # 领取成功；今日已领取；
+            # 停止该号
+            # flag_arr[i] = False
+            mask_dict[ck] = -1
+            # msg(f"所有进程停止账号：{getUserName(ck)}")
+        # if result['subCode'] == 'A19' or result['subCode'] == 'A28': # 很抱歉没抢到
+        # 2022年5月会因为log问题出现“很抱歉”，删掉
+        if result['subCode'] == 'A19':  # 很抱歉没抢到
+            mask_dict[ck] = 0
+            # msg(f"所有进程停止账号：{getUserName(ck)}")
+    # if flag:
+    #     break
+
+
 def generateBody(body_dict, log_dict):
     body = json.dumps({"activityId": body_dict['activityId'],
                        "scene": body_dict['scene'],
@@ -743,6 +781,204 @@ def generateBody(body_dict, log_dict):
                        "random": log_dict['random']}
                       ).replace(' ', '')
     return f"body={parse.quote(body)}"
+
+
+def jdTime():
+    url = 'http://api.m.jd.com/client.action?functionId=queryMaterialProducts&client=wh5'
+    headers = {
+        "user-agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36'
+    }
+    try:
+        res = requests.get(url=url, headers=headers, timeout=1).json()
+        return int(res['currentTime2'])
+    except:
+        return 0
+
+
+# multiple process to multiple threading
+"""
+batch_size：优先前batch_size个号
+other_batch_size：前batch_size个全部完成后，才每次选择other_batch_size个
+waiting_delta：等待时延
+thread_number：共计thread_number个线程，每个线程处理1个ck，当thread_number > batch_number时，会重复选择；否则只取前thread_number个账号
+"""
+def exchangeCouponsMayMonthV3(
+        header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0',
+        body_dict={}, batch_size=4, other_batch_size=4, waiting_delta=0.3, sleep_time=0.03, thread_number=4, coupon_type=""):
+    # TODO DEBUG
+    debug_flag = False
+
+    requests.packages.urllib3.disable_warnings()
+
+    # TODO
+    pwd = os.path.dirname(os.path.abspath(__file__)) + os.sep
+    path = pwd + "env.sh"
+
+    sid = ''.join(random.sample('123456789abcdef123456789abcdef123456789abcdef123456789abcdef', 32))
+    sid_ck = ''.join(
+        random.sample('123456789abcdef123456789abcdef123456789abcdef123456789abcdefABCDEFGHIJKLMNOPQRSTUVWXYZ', 43))
+
+    # TODO DEBUG
+    if debug_flag:
+        cookies = ["pt_key=AAJiapGZADAj8FFb7WrzWGW9B5d11XYF8U-NUKQg4TdGydjHUKdfFcWM5vCzFfPST2QTkQbNR5Q;pt_pin=jd_53aa3f2579461;",
+                   "pt_key=AAJiaoeQADBW8pF6NwpJKWrJA39aie8hI8semn2SV4s8fcBvDfMmd_hxP8tiHqtsh9S03vqV-Oo;pt_pin=jd_tIxKpKBLwQtJ;",
+                   "pt_key=AAJiaoeQADBW8pF6NwpJKWrJA39aie8hI8semn2SV4s8fcBvDfMmd_hxP8tiHqtsh9S03vqV-Oo;pt_pin=jd_tIxKpKBLwQtJ;",
+                   "pt_key=AAJie0SUADAfDWae9f5nzapCmXN539rUIYKTHvzjbTazY3oQ92cYjnL2LSi0dTLupZ5UVEb9064;pt_pin=jd_7f4f655edb984;",
+                   "pt_key=AAJiZOPOADCzXELKguL5uIuqzhb0hDmmMe0gtwGzi2wcraYyBlIOgTgSPhs8EvCOsb-KLVGt6Bc;pt_pin=SSS194911;"]
+    else:
+        cookies = os.environ["JD_COOKIE"].split('&')
+
+    if 'DATABASE_TYPE' in os.environ and \
+            'DATABASE_HOST' in os.environ and \
+            'DATABASE_PORT' in os.environ and \
+            'DATABASE_USER' in os.environ and \
+            'DATABASE_PASSWD' in os.environ and \
+            'DATABASE_DATABASE' in os.environ:
+        database_dict = {
+            "type": os.environ['DATABASE_TYPE'],
+            "host": os.environ['DATABASE_HOST'],  # 数据库主机地址
+            "port": os.environ['DATABASE_PORT'],
+            "user": os.environ['DATABASE_USER'],  # 数据库用户名
+            "passwd": os.environ['DATABASE_PASSWD'],  # 数据库密码
+            "database": os.environ['DATABASE_DATABASE']
+        }
+    else:
+        database_dict = {
+            'type': 'sqlite',
+            'name': "filtered_cks.db"
+        }
+
+    # 存入数据库
+    database = SQLProcess(body_dict['args'].replace('=', '').replace(',', ''), database_dict)
+    # 插入所有数据，如果存在则更新
+    insert_start = time.time()
+    for i, ck in enumerate(cookies):
+        database.insertItem(ck, time.time(), str(datetime.date.today()), len(cookies) - i)
+    insert_end = time.time()
+    print("\nTime for updating/inserting cookie database: {:.2f}s\n".format(insert_end - insert_start))
+
+    print('\nThe database before updating: ')
+    database.printTodayItems()
+
+    # 可修订仓库batch size，非零点抢券时更新
+    if datetime.datetime.now().strftime('%H') != '23':
+        # cookies, visit_times = database.filterUsers(batch_size)
+        # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
+        cookies, visit_times = database.filterUsersWithPriorityLimited(user_number=other_batch_size,
+                                                                       year_month_day=str(datetime.date.today()),
+                                                                       priority_number=batch_size)
+    # 23点只提前batch_size个
+    else:
+        cookies = cookies[:min(batch_size, len(cookies))]
+        visit_times = []
+
+    # 每个线程每个账号循环次数
+    if len(cookies) == 0:
+        print("All accounts have the coupon today! Exiting...")
+        # 当前cookies没有时，就
+        return
+
+    # 将优先级最高的ck增加一次机会，当存在的ck对应次数都一致时不增加。
+    if len(cookies) > 1 and len(visit_times):
+        max_times = max(visit_times)
+        for i in range(len(visit_times)):
+            if visit_times[i] == max_times:
+                cookies.append(cookies[i])
+                break
+
+    # 总线程个数 thread_number
+
+    # 共计调用thread_number个log
+    table_name = 'log_' + datetime.datetime.now().strftime("%Y%m%d")
+    log_database = SQLProcess(table_name=table_name, database_dict=database_dict, table_type='log')
+    log_database.printLogs()
+
+    # log_str包含了log和random两个参数的字符串
+    log_str_arr = log_database.getManyLog(thread_number)
+    print(f'\nCost logs number : {thread_number}. Left logs number: {log_database.logsNumber()}.')
+
+    # 每个线程只负责一个ck
+    request_url_list = []
+    for process_id in range(thread_number):
+        ck = cookies[process_id % len(cookies)]
+        request_url_list.append({
+            'url': header,
+            'headers': {
+                "Accept": "*/*",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Connection": "keep-alive",
+                "Content-Type": "application/x-www-form-urlencoded",
+                'origin': 'https://pro.m.jd.com',
+                "Referer": "https://prodev.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?sid=bf6ae253e73f472d5ec294810f46665w&un_area=7_502_35752_35860",
+                "Cookie": cookies[process_id % len(cookies)],
+                "User-Agent": userAgent(),
+            },
+            'body': generateBody(body_dict, json.loads(log_str_arr[process_id]))
+        })
+
+    print("\n待抢账号：")
+    print("\n".join([getUserName(ck) for ck in cookies]), '\n')
+
+    threads = []
+    mask_dict = {}
+    for ck in cookies:
+        mask_dict[ck] = 1
+
+    for i in range(thread_number):
+        threads.append(threading.Thread(target=exchangeThread, args=(
+                    cookies[i % len(cookies)], request_url_list[i], mask_dict, i, thread_number)))
+
+    random.shuffle(threads)
+
+    if datetime.datetime.now().strftime('%H') == '19':
+        waiting_delta += 0.1
+
+    printT('Ready for coupons...')
+
+    jd_timestamp = datetime.datetime.fromtimestamp(jdTime() / 1000)
+    server_delta = (jd_timestamp - datetime.datetime.now()).total_seconds()
+    printT(f"Server delay (JD server - current server): {server_delta}s.")
+    nex_minute = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
+    waiting_time = (nex_minute - jd_timestamp).total_seconds()
+    printT(f"Waiting {waiting_time}s...")
+    time.sleep(max(waiting_time - waiting_delta, 0))
+
+    printT("Sub-thread(s) start...")
+    for t in threads:
+        t.start()
+        time.sleep(sleep_time)
+    for t in threads:
+        t.join()
+    printT("Sub-thread(s) done...")
+
+    print()
+
+    summary = f"Coupon ({coupon_type})"
+    content = ""
+
+    # 将为False的ck更新为负值
+    for ck, state in mask_dict.items():
+        if state <= 0:
+            database.insertItem(ck, time.time(), str(datetime.date.today()), state)
+        # else:
+        # 当前尚未抢到时，权重+1，state为0时说明火爆，不自增
+        database.addTimes(ck, str(datetime.date.today()))
+        if state == -1:
+            print(f"账号：{getUserName(ck)} 抢到{coupon_type}优惠券")
+            content += f"账号：{getUserName(ck)} 抢到{coupon_type}优惠券\n"
+
+    print('\n更新后数据库如下：')
+    today_information = database.printTodayItems()
+    content += f"\n\n----------------------\n今日抢到{coupon_type}优惠券账号如下：\n" + today_information + "----------------------\n"
+
+    if len(coupon_type):
+        sendNotification(summary=summary, content=content)
+
+    database.close()
+
+
+
 
 def exchangeCouponsMayMonthV2(header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0', body_dict = {}, batch_size=4, other_batch_size=4, waiting_delta=0.3, process_number=4, coupon_type=""):
     debug_flag = False

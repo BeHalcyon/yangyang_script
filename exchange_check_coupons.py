@@ -5,7 +5,7 @@
 Author: yangyang
 功能：
 Date: 2022-5-22
-cron: 0 58 14,7 * * *
+cron: 0 23 14,20 * * *
 new Env("优惠券通知");
 '''
 from exchange_lib import *
@@ -26,6 +26,11 @@ def generateCouponInfo(user_name, coupon_dict):
 
 def findCoupons(cookie):
     coupon_dict = {
+        "59-20": {
+            "coupon_number": 0,
+            "today_expire": 0,
+            "coupon_type": "京东"
+        },
         "15-8元": {
             "coupon_number": 0,
             "today_expire": 0,
@@ -41,6 +46,11 @@ def findCoupons(cookie):
             "today_expire": 0,
             "coupon_type": "极速版"
         },
+        "10-3元": {
+            "coupon_number": 0,
+            "today_expire": 0,
+            "coupon_type": "极速版"
+        },
         "10-2元": {
             "coupon_number": 0,
             "today_expire": 0,
@@ -50,11 +60,6 @@ def findCoupons(cookie):
             "coupon_number": 0,
             "today_expire": 0,
             "coupon_type": "极速版"
-        },
-        "59-20": {
-            "coupon_number": 0,
-            "today_expire": 0,
-            "coupon_type": "京东"
         }
     }
 
