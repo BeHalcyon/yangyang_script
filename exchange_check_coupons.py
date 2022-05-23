@@ -92,7 +92,7 @@ def findCoupons(cookie):
 
     for current_coupon in coupon_list:
         for coupon_name, coupon_info in coupon_dict.items():
-            _res = re.compile(f"[^\d]{coupon_name}[^\d]?")
+            _res = re.compile(f"[^\d]{coupon_name.split('-')[0]}.{coupon_name.split('-')[1]}[^\d]?")
             if len(_res.findall(current_coupon['couponTitle'])):
             # if coupon_name in current_coupon['couponTitle']:
                 coupon_dict[coupon_name]['coupon_number'] += 1
