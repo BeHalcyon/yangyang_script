@@ -818,15 +818,7 @@ def exchangeCouponsMayMonthV3(
     sid_ck = ''.join(
         random.sample('123456789abcdef123456789abcdef123456789abcdef123456789abcdefABCDEFGHIJKLMNOPQRSTUVWXYZ', 43))
 
-    # TODO DEBUG
-    if debug_flag:
-        cookies = ["pt_key=AAJiapGZADAj8FFb7WrzWGW9B5d11XYF8U-NUKQg4TdGydjHUKdfFcWM5vCzFfPST2QTkQbNR5Q;pt_pin=jd_53aa3f2579461;",
-                   "pt_key=AAJiaoeQADBW8pF6NwpJKWrJA39aie8hI8semn2SV4s8fcBvDfMmd_hxP8tiHqtsh9S03vqV-Oo;pt_pin=jd_tIxKpKBLwQtJ;",
-                   "pt_key=AAJiaoeQADBW8pF6NwpJKWrJA39aie8hI8semn2SV4s8fcBvDfMmd_hxP8tiHqtsh9S03vqV-Oo;pt_pin=jd_tIxKpKBLwQtJ;",
-                   "pt_key=AAJie0SUADAfDWae9f5nzapCmXN539rUIYKTHvzjbTazY3oQ92cYjnL2LSi0dTLupZ5UVEb9064;pt_pin=jd_7f4f655edb984;",
-                   "pt_key=AAJiZOPOADCzXELKguL5uIuqzhb0hDmmMe0gtwGzi2wcraYyBlIOgTgSPhs8EvCOsb-KLVGt6Bc;pt_pin=SSS194911;"]
-    else:
-        cookies = os.environ["JD_COOKIE"].split('&')
+    cookies = os.environ["JD_COOKIE"].split('&')
 
     if 'DATABASE_TYPE' in os.environ and \
             'DATABASE_HOST' in os.environ and \
