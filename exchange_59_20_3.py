@@ -5,17 +5,24 @@
 Author: yangyang
 功能：
 Date: 2022-5-23
-cron: 0 59 9,13,17,21,23 * * *
+cron: 0 59 9,13,19,23 * * *
 new Env("京东59减20点点券2");
 '''
 
 from exchange_lib import *
 
-def exchangeThread(ck, request_url, mask_dict, thread_id, thread_number):
+
+def exchangeThread(cookie, request_url, mask_dict, thread_id, thread_number):
+    # 当前时间段抢空；；活动结束了
+    # process_stop_code_set = set(['D2', 'A15', 'A6'])
+    # if datetime.datetime.now().strftime('%H') != '23':
+    #     process_stop_code_set.add('A14')  # 今日没了
+    ck = cookie
+
     response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'],
                              data=request_url['body'])
     result = response.json()
-    result_string = result['result']['floorResult']['biz_msg']
+    result_string = result['result']['floorResult']['biz_msg'] if 'biz_msg' in result['result']['floorResult'] else result['result']['floorResult']
     printT(
         f"Thread: {thread_id}/{thread_number}, user：{getUserName(ck)}: {result_string}")
 
@@ -40,7 +47,7 @@ def exchangeWithoutSignOrLog(header='https://api.m.jd.com/client.action?function
     sid_ck = ''.join(
         random.sample('123456789abcdef123456789abcdef123456789abcdef123456789abcdefABCDEFGHIJKLMNOPQRSTUVWXYZ', 43))
 
-    cookies = os.environ["JD_COOKIE"].split('&')
+    cookies = os.environ["JD_COOKIE"].split('&') if "JD_COOKIE" in os.environ else []
 
     if 'DATABASE_TYPE' in os.environ and \
             'DATABASE_HOST' in os.environ and \
@@ -62,30 +69,40 @@ def exchangeWithoutSignOrLog(header='https://api.m.jd.com/client.action?function
             'name': "filtered_cks.db"
         }
 
-    # TODO 修改为每周一次
+
     # 存入数据库
-    database = SQLProcess(json.dumps(body).replace('=', '').replace(',', '').replace('{', '').replace('}', '').replace('"', '').replace(' ', '').replace(':', ''), database_dict)
+    database = SQLProcess("ck2_59_20_" + time.strftime("%Y%W"), database_dict)
     # 插入所有数据，如果存在则更新
     insert_start = time.time()
+    today_week_str = time.strftime("%Y-(%W) ")
     for i, ck in enumerate(cookies):
-        database.insertItem(ck, time.time(), str(datetime.date.today()), len(cookies) - i)
+        database.insertItem(ck, time.time(), today_week_str, len(cookies) - i)
     insert_end = time.time()
-    print("\nTime for updating/inserting cookie database: {:.2f}s\n".format(insert_end - insert_start))
+    print("\nTime for updating/inserting into database：{:.2f}s\n".format(insert_end - insert_start))
 
-    print('\nThe database before updating: ')
-    database.printTodayItems()
+    print('\nDatabase before updating：')
+    database.printAllItems()
+
+    # Debug 部署时修改
+    cookies, visit_times = database.filterUsers(user_number=batch_size, year_month_day=today_week_str)
+    # cookies, visit_times = database.filterUsers(user_number=60, year_month_day=today_week_str)
+    # cookies = cookies[:min(len(cookies), batch_size)]
+
 
     # 可修订仓库batch size，非零点抢券时更新
-    if datetime.datetime.now().strftime('%H') != '23':
-        # cookies, visit_times = database.filterUsers(batch_size)
-        # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
-        cookies, visit_times = database.filterUsersWithPriorityLimited(user_number=other_batch_size,
-                                                                       year_month_day=str(datetime.date.today()),
-                                                                       priority_number=batch_size)
-    # 23点只提前batch_size个
-    else:
-        cookies = cookies[:min(batch_size, len(cookies))]
-        visit_times = []
+    # TODO DEBUG
+    # if datetime.datetime.now().strftime('%H') != '230':
+    #     # cookies, visit_times = database.filterUsers(batch_size)
+    #     # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
+    #     cookies, visit_times = database.filterUsersWithPriorityLimited(user_number=other_batch_size,
+    #                                                                    year_month_day=str(datetime.date.today()),
+    #                                                                    priority_number=batch_size)
+    # # 23点只提前batch_size个
+    # else:
+    #     cookies = cookies[:min(batch_size, len(cookies))]
+    #     visit_times = []
+
+    # cookies, visit_times = database.filterUsers(batch_size)
 
     # 每个线程每个账号循环次数
     if len(cookies) == 0:
@@ -100,6 +117,11 @@ def exchangeWithoutSignOrLog(header='https://api.m.jd.com/client.action?function
             if visit_times[i] == max_times:
                 cookies.append(cookies[i])
                 break
+
+    random.shuffle(cookies)
+    # cookies = cookies[-3:]
+    print("\nAccount ready to run：")
+    print("\n".join([getUserName(ck) for ck in cookies]), '\n')
 
 
     # 每个线程只负责一个ck
@@ -145,8 +167,11 @@ def exchangeWithoutSignOrLog(header='https://api.m.jd.com/client.action?function
     jd_timestamp = datetime.datetime.fromtimestamp(jdTime() / 1000)
     server_delta = (jd_timestamp - datetime.datetime.now()).total_seconds()
     printT(f"Server delay (JD server - current server): {server_delta}s.")
-    nex_minute = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
-    waiting_time = (nex_minute - jd_timestamp).total_seconds()
+    if debug_flag:
+        nex_time = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
+    else:
+        nex_time = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+    waiting_time = (nex_time - jd_timestamp).total_seconds()
     printT(f"Waiting {waiting_time}s...")
     time.sleep(max(waiting_time - waiting_delta, 0))
 
@@ -160,28 +185,53 @@ def exchangeWithoutSignOrLog(header='https://api.m.jd.com/client.action?function
 
     print()
 
-    summary = f"Coupon ({coupon_type})"
-    content = ""
-
+    # update database
+    print()
     # 将为False的ck更新为负值
     for ck, state in mask_dict.items():
         if state <= 0:
-            database.insertItem(ck, time.time(), str(datetime.date.today()), state)
+            database.insertItem(ck, time.time(), today_week_str, state)
         # else:
-        # 当前尚未抢到时，权重+1，state为0时说明火爆，不自增
-        database.addTimes(ck, str(datetime.date.today()))
-        if state == -1:
-            print(f"账号：{getUserName(ck)} 抢到{coupon_type}优惠券")
-            content += f"账号：{getUserName(ck)} 抢到{coupon_type}优惠券\n"
+        # 当前尚未抢到时，次数+1，state为0时说明不足，不自增
+        database.addTimes(ck, today_week_str)
 
-    print('\n更新后数据库如下：')
-    today_information = database.printTodayItems()
-    content += f"\n\n----------------------\n今日抢到{coupon_type}优惠券账号如下：\n" + today_information + "----------------------\n"
+    # TODO DEBUG
+    # message notification
+    summary = f"Coupon ({coupon_type})"
+    content = ""
+    print()
+    # 将为False的ck更新为负值
+    for ck, state in mask_dict.items():
+        if state == -1:
+            print(f"User: {getUserName(ck)} 抢到优惠券")
+            content += f"User: {getUserName(ck)} 抢到优惠券！\n"
+        elif state == 0:
+            print(f"User: {getUserName(ck)} 点点券不足")
+            content += f"User: {getUserName(ck)} 点点券不足！\n"
+        elif state == -2:
+            print(f"User: {getUserName(ck)} ck过期")
+            content += f"User: {getUserName(ck)} ck过期！\n"
+        else:
+            print(f"User: {getUserName(ck)} 未抢到")
+            content += f"User: {getUserName(ck)} 未抢到！\n"
+
+
+    print('\nDatabase after updating：')
+    # database.printAllItems()
+    # database.close()
+    #
+    # printT("Ending...")
+
+    today_information = database.printAllItems(year_month_day=today_week_str)
+    content += f"\n\n----------------------\n今日{coupon_type}优惠券账号状态如下：\n" + today_information + "----------------------\n"
 
     if len(coupon_type):
         sendNotification(summary=summary, content=content)
 
+
     database.close()
+    printT("Ending...")
+
 
 
 
@@ -194,4 +244,4 @@ waiting_delta = float(os.environ['WAITING_DELTA']) if "WAITING_DELTA" in os.envi
 # exchangeCouponsMayMonthV3(header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0", body_dict=body_dict, batch_size=5, other_batch_size=2, waiting_delta=0.25, process_number=4, coupon_type="15-8")
 # exchangeWithoutSignOrLog(header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0", body_dict=body_dict, batch_size=10, other_batch_size=5, waiting_delta=0.25, sleep_time=0.03, thread_number=20, coupon_type="15-8")
 exchangeWithoutSignOrLog(header="https://api.m.jd.com/client.action?functionId=volley_ExchangeAssetFloorForColor&appid=coupon-activity&client=wh5&area=17_1381_50718_53772&geo=%5Bobject%20Object%5D&t=1653322985601&eu=5663338346331693&fv=9323932366232313",
-                         body=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.33, sleep_time=0.03, thread_number=20, coupon_type="59-20(3)")
+                         body=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.37, sleep_time=0.03, thread_number=20, coupon_type="59-20(3)")
