@@ -91,17 +91,17 @@ def exchangeWithoutSignOrLog(header='https://api.m.jd.com/client.action?function
 
     # 可修订仓库batch size，非零点抢券时更新
     # TODO DEBUG
-    # if datetime.datetime.now().strftime('%H') != '230':
-    #     # cookies, visit_times = database.filterUsers(batch_size)
-    #     # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
-    #     cookies, visit_times = database.filterUsersWithPriorityLimited(user_number=other_batch_size,
-    #                                                                    year_month_day=str(datetime.date.today()),
-    #                                                                    priority_number=batch_size)
+    if datetime.datetime.now().strftime('%H') != '230':
+        # cookies, visit_times = database.filterUsers(batch_size)
+        # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
+        cookies, visit_times = database.filterUsersWithPriorityLimited(user_number=other_batch_size,
+                                                                       year_month_day=today_week_str,
+                                                                       priority_number=batch_size)
     # # 23点只提前batch_size个
-    # else:
-    #     cookies = cookies[:min(batch_size, len(cookies))]
-    #     visit_times = []
-
+    else:
+        # cookies = cookies[:min(batch_size, len(cookies))]
+        # visit_times = []
+        cookies, visit_times = database.filterUsers(user_number=batch_size, year_month_day=today_week_str)
     # cookies, visit_times = database.filterUsers(batch_size)
 
     # 每个线程每个账号循环次数
