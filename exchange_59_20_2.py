@@ -354,6 +354,6 @@ if __name__ == "__main__":
     #     header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0',
     #     body=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.35, sleep_time=0.001, thread_number=20, coupon_type="59-20(2)")
 
-        exchangeWithoutNecklaceCoupon(
+    exchangeWithoutNecklaceCoupon(
         header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0',
         body=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.5, sleep_time=0.001, thread_number=30, coupon_type="59-20(2)")
