@@ -26,12 +26,13 @@ def generateCouponInfo(user_name, coupon_dict):
 
 
 def findCoupons(cookie):
+    requests.packages.urllib3.disable_warnings()
     coupon_dict = {
-        "59-20": {
+        "点点券59-20": {
             "coupon_number": 0,
             "today_expire": 0,
             "today_get": 0,
-            "coupon_type": "京东"
+            "coupon_type": ""
         },
         "15-8元": {
             "coupon_number": 0,
