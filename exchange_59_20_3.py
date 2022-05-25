@@ -26,7 +26,7 @@ def exchangeThread(cookie, request_url, mask_dict, thread_id, thread_number):
     printT(
         f"Thread: {thread_id}/{thread_number}, user：{getUserName(ck)}: {result_string}")
 
-    if "成功" in result_string:
+    if "成功" in result_string or "已兑换" in result_string:
         mask_dict[ck] = -1
     elif "不足" in result_string:
         mask_dict[ck] = 0
