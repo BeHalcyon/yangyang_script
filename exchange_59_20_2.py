@@ -334,17 +334,6 @@ def exchangeWithoutNecklaceCoupon(header='https://api.m.jd.com/client.action?fun
 
 if __name__ == "__main__":
 
-    os.environ["DATABASE_TYPE"] = "mysql"
-    os.environ["DATABASE_HOST"] = "xiangyanghe.top"
-    os.environ["DATABASE_PORT"] = "3306"
-    os.environ["DATABASE_USER"] = "sql_coupon"
-    os.environ["DATABASE_PASSWD"] = "DthmCa8YRYprzT45"
-    os.environ["DATABASE_DATABASE"] = "sql_coupon"
-    os.environ["JD_SIGN_API"] = "http://xiangyanghe.cn:9091/yangyang/jdSign"
-    os.environ["JD_SIGN_API_TOKEN"] = "LKHJFPOajslfkjPFoasdfajQOIJ"
-    os.environ["WXPUSHER_APP_TOKEN"] = "AT_2us2aVEfFfvcl2zk8E3fWQwyxEgqYt6c"
-    os.environ["WXPUSHER_UID"] = "UID_tsUTi2JU8CZxW7b58OryyaIdaiOW"
-
     body_dict = {"activityId":"csTQSAnfQypSN7KeyCwJWthE6aV","from":"H5node","scene":"1","args":"key=m9a6teebr9iaa0lfc4m6sbb4a6351303,roleId=76337067"}
     # exchangeCouponsMayMonthV3(
     #     header="https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0",
