@@ -42,8 +42,8 @@ def sendNotification(summary, content):
 
 
 def printT(s):
-    print("[{0}]: {1}".format(datetime.datetime.now(), s), flush=True)
-    # print("[{0}]: {1}".format(datetime.datetime.now(), s))
+    # print("[{0}]: {1}".format(datetime.datetime.now(), s), flush=True)
+    print("[{0}]: {1}".format(datetime.datetime.now(), s))
     sys.stdout.flush()
 
 def getEnvs(label):

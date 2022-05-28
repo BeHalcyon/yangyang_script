@@ -3,6 +3,7 @@
 *.c
 *.npy
 *.
+exchange_lib.py
 origin_logs
 logs
 build
