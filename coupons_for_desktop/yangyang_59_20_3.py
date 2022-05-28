@@ -23,9 +23,12 @@ import requests
 import sys
 
 
-def getUserName(cookie):
+def getUserName(cookie, mask=False):
     try:
-        return unquote(re.compile(r"pt_pin=(.*?);").findall(cookie)[0])
+        res = unquote(re.compile(r"pt_pin=(.*?);").findall(cookie)[0])
+        if mask:
+            res = res[:5] + min(2, len(res) - 10) * '*' + res[-5:]
+        return res
     except Exception as e:
         print(e, "ERROR in cookie format！")
         exit(2)
@@ -102,10 +105,20 @@ def exchangeThread(cookie, request_url, mask_dict, thread_id, thread_number):
     response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'],
                              data=request_url['body'])
     result = response.json()
-    result_string = json.dumps(result) if 'result' not in result else result['result']['floorResult'][
-        'biz_msg'] if 'biz_msg' in result['result']['floorResult'] else result['result']['floorResult']
+    # print(result)
+    if 'result' not in result:
+        if 'retMessage' in result:
+            result_string = result['retMessage']
+        else:
+            result_string = "TODO Message."
+    else:
+        if 'biz_msg' in result['result']['floorResult']:
+            result_string = result['result']['floorResult']['biz_msg']
+        else:
+            result_string = result['result']['floorResult']
+        # result_string =  result['result']['floorResult']['biz_msg'] if 'biz_msg' in result['result']['floorResult'] else result['result']['floorResult']
     printT(
-        f"Thread: {thread_id}/{thread_number}, user：{getUserName(ck)}: {result_string}")
+        f"Thread: {thread_id}/{thread_number}, user：{getUserName(ck, True)}: {result_string}")
 
     if "成功" in result_string or "已兑换" in result_string:
         mask_dict[ck] = -1
@@ -187,7 +200,6 @@ def exchangeWithoutSignOrLog(
 
     print()
 
-    # TODO DEBUG
     # message notification
     summary = f"Coupon ({coupon_type})"
     content = ""
@@ -212,12 +224,13 @@ def exchangeWithoutSignOrLog(
     if len(coupon_type):
         sendNotification(summary=summary, content=content)
 
+    print()
     printT("Ending...")
 
 
 def loopForDays(header,
                 body,
-                waiting_delta,
+                second_ahead,
                 sleep_time,
                 thread_number,
                 coupon_type="59-20(3)",
@@ -246,12 +259,12 @@ def loopForDays(header,
 
         exchangeWithoutSignOrLog(header=header,
                                  body=body,
-                                 waiting_delta=waiting_delta,
+                                 waiting_delta=second_ahead,
                                  sleep_time=sleep_time,
                                  thread_number=thread_number,
                                  coupon_type=coupon_type)
 
- 
+
 if __name__ == "__main__":
     header = "https://api.m.jd.com/client.action?functionId=volley_ExchangeAssetFloorForColor&appid=coupon-activity&client=wh5&area=17_1381_50718_53772&geo=%5Bobject%20Object%5D&t=1653322985601&eu=5663338346331693&fv=9323932366232313"
     body_dict = {
@@ -263,9 +276,11 @@ if __name__ == "__main__":
     # Delete the following code when using qinglong environment.
     os.environ["JD_COOKIE"] = "&".join(
         [
-            "pt_key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;pt_pin=BBBBBBBBBBBBB;",
-            "pt_key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;pt_pin=BBBBBBBBBBBBB;",
-            "pt_key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;pt_pin=BBBBBBBBBBBBB;"
+            # 多号时候添加，少号时删除
+            "pt_key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;pt_pin=jd_AAAAAAAAAAAAA;",
+            "pt_key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;pt_pin=jd_AAAAAAAAAAAAA;",
+            "pt_key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;pt_pin=jd_AAAAAAAAAAAAA;",
+            "pt_key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;pt_pin=jd_AAAAAAAAAAAAA;"
         ]
     )
 
@@ -274,10 +289,13 @@ if __name__ == "__main__":
     os.environ["WXPUSHER_APP_TOKEN"] = ""
     os.environ["WXPUSHER_UID"] = ""
 
+    # TODO
+    # Need: change parameters
     loopForDays(header=header,
                 body=body_dict,
-                waiting_delta=0.4,  # 线程启动等待耗时
-                sleep_time=0.05,    # 每个线程的等待时间
-                thread_number=20,   # 线程数量
-                coupon_type="59-20(3)"
+                second_ahead=0.40,              # 线程启动的提前秒数；线程的冷冻时间；例如提前0.40s准备启动线程；依赖于设备资源
+                sleep_time=0.05,                # 每个线程的等待时间；每次post的等待时间；依赖于网络传输速率；
+                thread_number=20,               # 线程数量；post次数；可根据thread_number*sleep_time粗略计算当场运行时间
+                coupon_type="59-20(3)",         # 券名（可自定义）
+                clock_list=[0, 10, 14, 20, 22]  # 定时任务；例如0点场、10点场...
                 )
