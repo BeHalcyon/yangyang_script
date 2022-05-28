@@ -2,7 +2,7 @@
 *.txt
 *.c
 *.npy
-*.sh
+compile_and_upload_to_git.sh
 exchange_lib.py
 origin_logs
 logs
