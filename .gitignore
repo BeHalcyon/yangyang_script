@@ -2,7 +2,7 @@
 *.txt
 *.c
 *.npy
-
+*.sh
 exchange_lib.py
 origin_logs
 logs
