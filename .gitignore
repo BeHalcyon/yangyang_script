@@ -1,0 +1,9 @@
+*.db
+*.txt
+*.c
+*.npy
+*.
+origin_logs
+logs
+build
+__pycache__
