@@ -395,10 +395,10 @@ class SQLProcess:
 
 database_dict = {
             "type":     'mysql',
-            "host":     'xiangyanghe.top',        # 数据库主机地址
-            "port":     '3306',
+            "host":     'xxxxxxx',        # 数据库主机地址
+            "port":     'xxxx',
             "user":     'sql_coupon',        # 数据库用户名
-            "passwd":   'DthmCa8YRYprzT45',      # 数据库密码
+            "passwd":   'xxxxx',      # 数据库密码
             "database": 'sql_coupon'
         }
 
