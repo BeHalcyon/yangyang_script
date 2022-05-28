@@ -169,8 +169,8 @@ if __name__ == '__main__':
 
     # TODO
     # Not necessary: Add wxpusher notification if you want
-    os.environ["WXPUSHER_APP_TOKEN"] = "AT_2us2aVEfFfvcl2zk8E3fWQwyxEgqYt6c"
-    os.environ["WXPUSHER_UID"] = "UID_tsUTi2JU8CZxW7b58OryyaIdaiOW"
+    os.environ["WXPUSHER_APP_TOKEN"] = ""
+    os.environ["WXPUSHER_UID"] = ""
 
     summary = "优惠券速览"
     content = ""
