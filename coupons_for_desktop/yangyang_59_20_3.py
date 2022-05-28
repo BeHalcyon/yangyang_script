@@ -251,7 +251,7 @@ def loopForDays(header,
                                  thread_number=thread_number,
                                  coupon_type=coupon_type)
 
-
+ 
 if __name__ == "__main__":
     header = "https://api.m.jd.com/client.action?functionId=volley_ExchangeAssetFloorForColor&appid=coupon-activity&client=wh5&area=17_1381_50718_53772&geo=%5Bobject%20Object%5D&t=1653322985601&eu=5663338346331693&fv=9323932366232313"
     body_dict = {
@@ -277,7 +277,7 @@ if __name__ == "__main__":
     loopForDays(header=header,
                 body=body_dict,
                 waiting_delta=0.4,  # 线程启动等待耗时
-                sleep_time=0.05,  # 每个线程的等待时间
-                thread_number=20,  # 线程数量
+                sleep_time=0.05,    # 每个线程的等待时间
+                thread_number=20,   # 线程数量
                 coupon_type="59-20(3)"
                 )
