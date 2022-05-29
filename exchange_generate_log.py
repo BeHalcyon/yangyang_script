@@ -5,13 +5,25 @@
 Author: yangyang
 功能：
 Date: 2022-5-7
-cron: 10 0-2 * * *
+cron: 10 0-23/4,23 * * *
 new Env("极速版生成log");
 '''
 
 import json
 import requests
 from exchange_lib import *
+
+os.environ["DATABASE_TYPE"] = "mysql"
+os.environ["DATABASE_HOST"] = "xiangyanghe.top"
+os.environ["DATABASE_PORT"] = "3306"
+os.environ["DATABASE_USER"] = "sql_coupon"
+os.environ["DATABASE_PASSWD"] = "DthmCa8YRYprzT45"
+os.environ["DATABASE_DATABASE"] = "sql_coupon"
+os.environ["JD_SIGN_API"] = "http://xiangyanghe.cn:9091/yangyang/jdSign"
+os.environ["JD_SIGN_API_TOKEN"] = "LKHJFPOajslfkjPFoasdfajQOIJ"
+os.environ["WXPUSHER_APP_TOKEN"] = "AT_2us2aVEfFfvcl2zk8E3fWQwyxEgqYt6c"
+os.environ["WXPUSHER_UID"] = "UID_tsUTi2JU8CZxW7b58OryyaIdaiOW"
+os.environ["JDLITE_LOG_API"] = "http://xiangyanghe.top:5889/log"
 
 
 if 'DATABASE_TYPE' in os.environ and \
@@ -41,7 +53,9 @@ api_url = os.environ['JDLITE_LOG_API'] if "JDLITE_LOG_API" in os.environ else No
 logs = getLogs(url=api_url, num=generate_number)
 table_name = 'log_' + datetime.datetime.now().strftime("%Y%m%d")
 log_sql = SQLProcess(table_name=table_name, database_dict=database_dict, table_type='log')
-log_sql.printLogs()
+log_sql.deleteTable()
+log_sql.createTable()
 log_sql.insertManyLog(logs, times=3)
 printT(f"{generate_number} logs has been inserted.")
+# log_sql.printLogs()
 printT(f"There are {log_sql.logsNumber()} logs in table {table_name}")

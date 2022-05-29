@@ -251,6 +251,8 @@ def exchangeWithoutNecklaceCoupon(header='https://api.m.jd.com/client.action?fun
 
     # 每个线程只负责一个ck
     request_url_list = []
+    # 同个user_agent
+    user_agent = userAgent()
     for process_id in range(thread_number):
         buffer_body_string = f"body={parse.quote(json.dumps(body).replace(' ', ''))}"
         request_url_list.append({
@@ -264,7 +266,7 @@ def exchangeWithoutNecklaceCoupon(header='https://api.m.jd.com/client.action?fun
                 'origin': 'https://pro.m.jd.com',
                 "Referer": "https://prodev.m.jd.com/jdlite/active/3H885vA4sQj6ctYzzPVix4iiYN2P/index.html?sid=bf6ae253e73f472d5ec294810f46665w&un_area=7_502_35752_35860",
                 "Cookie": cookies[process_id % len(cookies)],
-                "User-Agent": userAgent(),
+                "User-Agent": user_agent,
             },
             'body': buffer_body_string
         })
@@ -345,4 +347,4 @@ if __name__ == "__main__":
 
     exchangeWithoutNecklaceCoupon(
         header='https://api.m.jd.com/client.action?functionId=lite_newBabelAwardCollection&client=wh5&clientVersion=1.0.0',
-        body=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.4, sleep_time=0.001, thread_number=30, coupon_type="59-20(2)")
+        body=body_dict, batch_size=6, other_batch_size=5, waiting_delta=0.3, sleep_time=0.001, thread_number=30, coupon_type="59-20(2)")
