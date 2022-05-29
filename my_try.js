@@ -101,7 +101,7 @@ let args_xh = {
      * 可设置环境变量：JD_TRY_TABID，用@进行分隔
      * 默认为 1 到 10
      * */
-    tabId: process.env.JD_TRY_TABID && process.env.JD_TRY_TABID.split('@').map(Number) || [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    tabId: process.env.JD_TRY_TABID && process.env.JD_TRY_TABID.split('@').map(Number) || [104, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     /*
      * 试用商品标题过滤，黑名单，当标题存在关键词时，则不加入试用组
      * 当白名单和黑名单共存时，黑名单会自动失效，优先匹配白名单，匹配完白名单后不会再匹配黑名单，望周知
@@ -150,7 +150,7 @@ let args_xh = {
      * 例如B商品是种草官专属试用商品，下面设置为true，即使你是种草官账号，A商品也不会被添加到待提交试用组
      * 可设置环境变量：JD_TRY_PASSZC，默认为true
      * */
-    passZhongCao: process.env.JD_TRY_PASSZC === 'true',
+    passZhongCao: process.env.JD_TRY_PASSZC === 'true' || true,
     /*
      * 是否打印输出到日志，考虑到如果试用组长度过大，例如100以上，如果每个商品检测都打印一遍，日志长度会非常长
      * 打印的优点：清晰知道每个商品为什么会被过滤，哪个商品被添加到了待提交试用组
@@ -352,7 +352,8 @@ function try_tabList() {
             "previewTime": ""
         });
         let option = taskurl_xh('newtry', 'try_tabList', body)
-        $.get(option, (err, resp, data) => {
+        // $.get(option, (err, resp, data) => {
+        $.post(option, (err, resp, data) => {
             try{
                 if(err){
                     if(JSON.stringify(err) === `\"Response code 403 (Forbidden)\"`){
@@ -391,7 +392,8 @@ function try_feedsList(tabId, page) {
             "previewTime": ""
         });
         let option = taskurl_xh('newtry', 'try_feedsList', body)
-        $.get(option, (err, resp, data) => {
+        // $.get(option, (err, resp, data) => {
+        $.post(option, (err, resp, data) => {
             try{
                 if(err){
                     if(JSON.stringify(err) === `\"Response code 403 (Forbidden)\"`){
@@ -502,8 +504,8 @@ function try_apply(title, activityId) {
             "activityId": activityId,
             "previewTime": ""
         });
-        // let option = taskurl_xh('newtry', 'try_apply', body)
-        let option = taskurl_try('newtry', 'try_apply', activityId, body)
+        let option = taskurl_xh('newtry', 'try_apply', body)
+        // let option = taskurl_try('newtry', 'try_apply', activityId, body)
         $.get(option, (err, resp, data) => {
             try{
                 if(err){
@@ -575,7 +577,7 @@ function try_MyTrials(page, selected) {
                 'origin': 'https://prodev.m.jd.com',
                 'User-Agent': 'jdapp;iPhone;10.3.4;;;M/5.0;appBuild/167945;jdSupportDarkMode/1;;;Mozilla/5.0 (iPhone; CPU iPhone OS 15_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1;',
                 'referer': 'https://prodev.m.jd.com/',
-                'cookie': $.cookie
+                'cookie': `${$.cookie} __jda=1.1.1.1.1.1;`
             },
         }
         $.post(options, (err, resp, data) => {
@@ -612,24 +614,38 @@ function try_MyTrials(page, selected) {
     })
 }
 
-
 function taskurl_xh(appid, functionId, body = JSON.stringify({})) {
     return {
-        "url": `${URL}?appid=${appid}&functionId=${functionId}&clientVersion=10.4.6&client=wh5&body=${encodeURIComponent(body)}`,
+        "url": `${URL}?appid=${appid}&functionId=${functionId}&clientVersion=10.3.4&client=wh5&body=${encodeURIComponent(body)}`,
         'headers': {
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Encoding": "gzip, deflate",
-            "Accept-Language": "zh-CN,zh",
-            // "Connection": "keep-alive",
-            "Content-Type": "application/x-www-form-urlencoded",
-            'origin': 'https://pro.m.jd.com',
-            "Referer": `https://prodev.m.jd.com/mall/active/G7sQ92vWSBsTHzk4e953qUGWQJ4/index.html`,
-            "Cookie": $.cookie,
-            "UserAgent": "jdapp;android;10.4.6;;;appBuild/95105;ef/1;ep/%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22%2C%22ts%22%3A1649486773010%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22sv%22%3A%22EG%3D%3D%22%2C%22ad%22%3A%22CzUmCzvsYzSnCtYzDNq0ZG%3D%3D%22%2C%22od%22%3A%22YtLwCzc0DQG3ZNOzEQS2Zq%3D%3D%22%2C%22ov%22%3A%22Ctq%3D%22%2C%22ud%22%3A%22ENY1DNGnCNC1DNC0EJY4BJHtDNvvC2Y1DNUzCm%3D%3D%22%7D%2C%22ciphertype%22%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D;jdSupportDarkMode/0;Mozilla/5.0 (Linux; Android 9; MI 6 Build/PKQ1.190118.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36"
-            // "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
-        }
+            'Cookie': `${$.cookie} __jda=1.1.1.1.1.1;`,
+            'user-agent': 'jdapp;iPhone;10.1.2;15.0;ff2caa92a8529e4788a34b3d8d4df66d9573f499;network/wifi;model/iPhone13,4;addressid/2074196292;appBuild/167802;jdSupportDarkMode/1;Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1',
+            'Referer': 'https://prodev.m.jd.com/',
+            'origin': 'https://prodev.m.jd.com/',
+            'Accept': 'application/json,text/plain,*/*',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'zh-cn',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
     }
 }
+
+//     return {
+//         "url": `${URL}?appid=${appid}&functionId=${functionId}&clientVersion=10.4.6&client=wh5&body=${encodeURIComponent(body)}`,
+//         'headers': {
+//             "Accept": "application/json, text/plain, */*",
+//             "Accept-Encoding": "gzip, deflate",
+//             "Accept-Language": "zh-CN,zh",
+//             // "Connection": "keep-alive",
+//             "Content-Type": "application/x-www-form-urlencoded",
+//             'origin': 'https://pro.m.jd.com',
+//             "Referer": `https://prodev.m.jd.com/mall/active/G7sQ92vWSBsTHzk4e953qUGWQJ4/index.html`,
+//             "Cookie": $.cookie,
+//             "UserAgent": "jdapp;android;10.4.6;;;appBuild/95105;ef/1;ep/%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22%2C%22ts%22%3A1649486773010%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22sv%22%3A%22EG%3D%3D%22%2C%22ad%22%3A%22CzUmCzvsYzSnCtYzDNq0ZG%3D%3D%22%2C%22od%22%3A%22YtLwCzc0DQG3ZNOzEQS2Zq%3D%3D%22%2C%22ov%22%3A%22Ctq%3D%22%2C%22ud%22%3A%22ENY1DNGnCNC1DNC0EJY4BJHtDNvvC2Y1DNUzCm%3D%3D%22%7D%2C%22ciphertype%22%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D;jdSupportDarkMode/0;Mozilla/5.0 (Linux; Android 9; MI 6 Build/PKQ1.190118.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36"
+//             // "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
+//         }
+//     }
+// }
 
 
 function taskurl_xh_old(appid, functionId, body = JSON.stringify({})) {
