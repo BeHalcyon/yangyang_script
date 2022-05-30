@@ -349,6 +349,7 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
         #     }
         # }
         del body['encrypt_uuid']
+    body['eid'] = randomString(16)
 
 
     headers["content-length"] = str(len(body))
