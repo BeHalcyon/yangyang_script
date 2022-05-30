@@ -339,17 +339,30 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
     # 增加ep参数
     if "encrypt_uuid" in body:
         body['ep'] = json.dumps({
+            "hdid": "JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw=",
+            "ridx": -1,
+            "ts": int(round(time.time()) * 1000),
             "cipher": {
-                "uuid": body['encrypt_uuid']
-            }
+                "area": "D181CNTpCzU3DJTpCzU4DtK=",
+                "d_model": "JUu2",
+                "wifiBssid": "DNYmYzGmYzYmDWHsZNS1YJUmDQS5EQG5CtcmCWU1YJY=",
+                "osVersion": "EG==",
+                "d_brand": "WQvrb21f",
+                "screen": "CJuyCMenCNqm",
+                "uuid": body["encrypt_uuid"],
+                "aid": body["encrypt_uuid"]
+            },
+            "ciphertype": 5,
+            "version": "1.2.0",
+            "appname": "com.jingdong.app.mall"
         }).replace(" ", "")
-        # body['ep'] = {
+        # body['ep'] = quote(json.dumps({
         #     "cipher": {
         #         "uuid": body['encrypt_uuid']
         #     }
-        # }
+        # }).replace(" ", ""))
+        # print(body['ep'])
         del body['encrypt_uuid']
-    body['eid'] = randomString(16)
 
 
     headers["content-length"] = str(len(body))
