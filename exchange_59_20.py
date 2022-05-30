@@ -332,10 +332,31 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
 
     url, body = api_para
     headers["cookie"] = cookie
+
+    # TODO
+    if "body" in body:
+        del body['body']
+    # 增加ep参数
+    if "encrypt_uuid" in body:
+        body['ep'] = json.dumps({
+            "cipher": {
+                "uuid": body['encrypt_uuid']
+            }
+        }).replace(" ", "")
+        # body['ep'] = {
+        #     "cipher": {
+        #         "uuid": body['encrypt_uuid']
+        #     }
+        # }
+        del body['encrypt_uuid']
+
+
     headers["content-length"] = str(len(body))
     prefix_info = f"Process: {thread_id + 1}/{thread_number}, User: {getUserName(cookie)}, "
     target_info = ""
-    res = requests.post(url=url, headers=headers, data=body).json()
+
+
+    res = requests.post(url=url, headers=headers, json=body).json()
     try:
         if res['code'] == '0' and res['msg'] == '响应成功':
             target_info = res['result']['desc']
@@ -615,7 +636,7 @@ def exchangeV2(batch_size=4, waiting_delta=0.26):
 # 多进程改为多线程
 def exchangeV3(batch_size=4, waiting_delta=0.26, loop_times=4, sleep_time=0.03):
     # TODO DEBUG
-    is_debug = False
+    is_debug = True
     # # TODO DEBUG
     # printT("Waiting to 22:00")
     # time.sleep(8700)
