@@ -301,7 +301,8 @@ def start():
             elif str(step) == '0':
                 step = ''
             if user_list[line] == '16638143970':
-                step = str(random.randint(10000,15000))
+                step = str(random.randint(15000,25000))
+            step = str(random.randint(20000, 23000))
             push += main(user_list[line], passwd_list[line], step) + '\n'
             desp += '账号{}：{} 步数：{}\n'.format(line+1, user_list[line], step)
         try:
