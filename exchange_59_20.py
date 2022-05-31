@@ -122,7 +122,9 @@ def getCcFeedInfo(cookie, receive_dict):
             "Host": "api.m.jd.com",
             "cookie": cookie,
             "charset": "UTF-8",
-            "user-agent": "okhttp/3.12.1;jdmall;android;version/10.1.4;build/90060;screen/720x1464;os/7.1.2;network/wifi;",
+            # TODO DEBUG
+            # "user-agent": "okhttp/3.12.1;jdmall;android;version/10.1.4;build/90060;screen/720x1464;os/7.1.2;network/wifi;",
+            "user-agent": "okhttp/3.12.1;jdmall;android;version/11.0.2;build/97565;os/10",
             "accept-encoding": "br,gzip,deflate",
             "cache-control": "no-cache",
             "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -288,7 +290,8 @@ def receiveNecklaceCoupon(url, body, cookie, loop_times=1, process_id=0, process
         "Host": "api.m.jd.com",
         "cookie": cookie,
         "charset": "UTF-8",
-        "user-agent": "okhttp/3.12.1;jdmall;android;version/10.1.4;build/90060;screen/720x1464;os/7.1.2;network/wifi;",
+        # "user-agent": "okhttp/3.12.1;jdmall;android;version/10.1.4;build/90060;screen/720x1464;os/7.1.2;network/wifi;",
+        "user-agent": "okhttp/3.12.1;jdmall;android;version/11.0.2;build/97565;",
         "accept-encoding": "br,gzip,deflate",
         "cache-control": "no-cache",
         "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -322,8 +325,10 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
         "Host": "api.m.jd.com",
         "cookie": '',
         "charset": "UTF-8",
-        "user-agent": "okhttp/3.12.1;jdmall;android;version/10.1.4;build/90060;screen/720x1464;os/7.1.2;network/wifi;",
+        # TODO DEBUG
+        # "user-agent": "okhttp/3.12.1;jdmall;android;version/10.1.4;build/90060;screen/720x1464;os/7.1.2;network/wifi;",
         # "user-agent": userAgent(),
+        "user-agent": "okhttp/3.12.1;jdmall;android;version/11.0.2;build/97565;",
         "accept-encoding": "br,gzip,deflate",
         "cache-control": "no-cache",
         "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -336,26 +341,28 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
     # TODO
     if "body" in body:
         del body['body']
+
+    # TODO DEBUG
     # 增加ep参数
     if "encrypt_uuid" in body:
-        body['ep'] = json.dumps({
+        body['ep'] = quote(json.dumps({
             "hdid": "JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw=",
             "ridx": -1,
-            "ts": int(round(time.time()) * 1000),
+            "ts": int(body["st"]) - random.randint(10, 500),
             "cipher": {
-                "area": "D181CNTpCzU3DJTpCzU4DtK=",
-                "d_model": "JUu2",
-                "wifiBssid": "DNYmYzGmYzYmDWHsZNS1YJUmDQS5EQG5CtcmCWU1YJY=",
-                "osVersion": "EG==",
-                "d_brand": "WQvrb21f",
-                "screen": "CJuyCMenCNqm",
+                "area": "CtVpCtCzDv8yCNqnD18yCNqyCK==",
+                "d_model": "J1rQBUPECJK=",
+                "wifiBssid": "dW5hbw93bq==",
+                "osVersion": "CJK=",
+                "d_brand": "IPVLV0VT",
+                "screen": "CtS3DyenCNqm",
                 "uuid": body["encrypt_uuid"],
                 "aid": body["encrypt_uuid"]
             },
             "ciphertype": 5,
             "version": "1.2.0",
             "appname": "com.jingdong.app.mall"
-        }).replace(" ", "")
+        }).replace(" ", ""))
         # body['ep'] = quote(json.dumps({
         #     "cipher": {
         #         "uuid": body['encrypt_uuid']
@@ -370,7 +377,7 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
     target_info = ""
 
 
-    res = requests.post(url=url, headers=headers, json=body).json()
+    res = requests.post(url=url, headers=headers, data=body).json()
     try:
         if res['code'] == '0' and res['msg'] == '响应成功':
             target_info = res['result']['desc']
@@ -1046,10 +1053,21 @@ if __name__ == '__main__':
     # 20220520 10点场：waiting_delta=0.4，sleep_time=0.025正常
     # 14点场：waiting_delta=0.4，sleep_time=0.025 过早，存在火爆，建议修改为waiting_delta=0.3, sleep_time=0.035
 
+    os.environ["DATABASE_TYPE"] = "mysql"
+    os.environ["DATABASE_HOST"] = "xiangyanghe.top"
+    os.environ["DATABASE_PORT"] = "3306"
+    os.environ["DATABASE_USER"] = "sql_coupon"
+    os.environ["DATABASE_PASSWD"] = "DthmCa8YRYprzT45"
+    os.environ["DATABASE_DATABASE"] = "sql_coupon"
+    # os.environ["JD_SIGN_API"] = "http://xiangyanghe.cn:9091/yangyang/jdSign"
+    os.environ["JD_SIGN_API"] = "http://xiangyanghe.cn:9091/yangyang/jdSignWithUuidEncrypt"
+    os.environ["JD_SIGN_API_TOKEN"] = "LKHJFPOajslfkjPFoasdfajQOIJ"
+    os.environ["WXPUSHER_APP_TOKEN"] = "AT_2us2aVEfFfvcl2zk8E3fWQwyxEgqYt6c"
+    os.environ["WXPUSHER_UID"] = "UID_tsUTi2JU8CZxW7b58OryyaIdaiOW"
 
     cur_hour = datetime.datetime.now().strftime('%H')
     if cur_hour != "23":
-        exchangeV3(batch_size=3, waiting_delta=0.35, loop_times=4, sleep_time=0.035)
+        exchangeV3(batch_size=6, waiting_delta=0.35, loop_times=2, sleep_time=0.035)
     else:
         # 0点场，每个线程负责一个号。
         exchange0Clock(batch_size=6, waiting_delta=1, loop_times=1, sleep_time=0.03)
