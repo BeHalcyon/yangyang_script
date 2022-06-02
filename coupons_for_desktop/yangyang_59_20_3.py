@@ -299,7 +299,7 @@ if __name__ == "__main__":
     os.environ["WXPUSHER_UID"] = ""
     # TODO
     # 调试时设置为True
-    os.environ['DEBUG_59_20_3'] = "True"
+    os.environ['DEBUG_59_20_3'] = "False"
 
 
     # TODO
