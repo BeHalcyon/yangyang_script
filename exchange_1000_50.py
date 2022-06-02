@@ -1,7 +1,7 @@
 #!/bin/env python3
 # -*- coding: utf-8 -*
 '''
-项目名称:exchange_15_8_test.py
+项目名称:exchange_1000_50.py
 Author: yangyang
 功能：
 Date: 2022-5-7

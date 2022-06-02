@@ -25,13 +25,20 @@ import sys
 
 def getUserName(cookie, mask=False):
     try:
-        res = unquote(re.compile(r"pt_pin=(.*?);").findall(cookie)[0])
-        if mask:
-            res = res[:5] + min(2, len(res) - 10) * '*' + res[-5:]
-        return res
+        r = re.compile(r"pt_pin=(.*?);")  # 指定一个规则：查找pt_pin=与;之前的所有字符,但pt_pin=与;不复制。r"" 的作用是去除转义字符.
+        userName = r.findall(cookie)  # 查找pt_pin=与;之前的所有字符，并复制给r，其中pt_pin=与;不复制。
+        # print (userName)
+        userName = unquote(userName[0])  # r.findall(cookie)赋值是list列表，这个赋值为字符串
+        # print(userName)
+        return userName
     except Exception as e:
-        print(e, "ERROR in cookie format！")
-        exit(2)
+        # print(e, "cookie格式有误！")
+        r = re.compile(r"pin=(.*?);")  # 指定一个规则：查找pt_pin=与;之前的所有字符,但pt_pin=与;不复制。r"" 的作用是去除转义字符.
+        userName = r.findall(cookie)  # 查找pt_pin=与;之前的所有字符，并复制给r，其中pt_pin=与;不复制。
+        # print (userName)
+        userName = unquote(userName[0])  # r.findall(cookie)赋值是list列表，这个赋值为字符串
+        # print(userName)
+        return userName
 
 
 def sendNotification(summary, content):
@@ -251,11 +258,13 @@ def loopForDays(header,
                                                                microsecond=0)
         waiting_time = (next_task_start_time - datetime.datetime.now()).total_seconds()
 
-        print("\n" + ("Waiting to " + str(next_task_start_time)).center(80, "*") + "\n")
-        printT(f"Waiting {waiting_time}s.")
-        time.sleep(waiting_time)
+        if not ('DEBUG_59_20_3' in os.environ and os.environ['DEBUG_59_20_3'] == 'True'):
+            print("\n" + ("Waiting to " + str(next_task_start_time)).center(80, "*") + "\n")
+            printT(f"Waiting {waiting_time}s.")
+            time.sleep(waiting_time)
 
-        printT(f"Starting coupon in {next_task_start_time}...")
+
+            printT(f"Starting coupon in {next_task_start_time}...")
 
         exchangeWithoutSignOrLog(header=header,
                                  body=body,
@@ -288,6 +297,10 @@ if __name__ == "__main__":
     # Not necessary: Add wxpusher notification if you want
     os.environ["WXPUSHER_APP_TOKEN"] = ""
     os.environ["WXPUSHER_UID"] = ""
+    # TODO
+    # 调试时设置为True
+    os.environ['DEBUG_59_20_3'] = "True"
+
 
     # TODO
     # Need: change parameters

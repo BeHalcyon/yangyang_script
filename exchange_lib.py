@@ -625,18 +625,23 @@ def getLogs(url = None, num=400):
     print(f"All {num} logs has been get.")
     return log_list
 
-
 def getUserName(cookie):
     try:
-        r = re.compile(r"pt_pin=(.*?);")    #指定一个规则：查找pt_pin=与;之前的所有字符,但pt_pin=与;不复制。r"" 的作用是去除转义字符.
-        userName = r.findall(cookie)        #查找pt_pin=与;之前的所有字符，并复制给r，其中pt_pin=与;不复制。
-        #print (userName)
-        userName = unquote(userName[0])     #r.findall(cookie)赋值是list列表，这个赋值为字符串
-        #print(userName)
+        r = re.compile(r"pt_pin=(.*?);")  # 指定一个规则：查找pt_pin=与;之前的所有字符,但pt_pin=与;不复制。r"" 的作用是去除转义字符.
+        userName = r.findall(cookie)  # 查找pt_pin=与;之前的所有字符，并复制给r，其中pt_pin=与;不复制。
+        # print (userName)
+        userName = unquote(userName[0])  # r.findall(cookie)赋值是list列表，这个赋值为字符串
+        # print(userName)
         return userName
     except Exception as e:
-        print(e,"cookie格式有误！")
-        exit(2)
+        # print(e, "cookie格式有误！")
+        r = re.compile(r"pin=(.*?);")  # 指定一个规则：查找pt_pin=与;之前的所有字符,但pt_pin=与;不复制。r"" 的作用是去除转义字符.
+        userName = r.findall(cookie)  # 查找pt_pin=与;之前的所有字符，并复制给r，其中pt_pin=与;不复制。
+        # print (userName)
+        userName = unquote(userName[0])  # r.findall(cookie)赋值是list列表，这个赋值为字符串
+        # print(userName)
+        return userName
+
 
 def postUrl(request_url):
     response = requests.post(url=request_url['url'], verify=False, headers=request_url['headers'], data=request_url['body'])
