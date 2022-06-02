@@ -16,7 +16,7 @@ import threading
 import time
 from urllib import parse
 from urllib.parse import unquote
-
+import sqlite3 as sqlite
 import json
 import re
 import requests
@@ -90,6 +90,256 @@ def printT(s):
     sys.stdout.flush()
 
 
+
+
+
+class SQLProcess:
+
+    def __init__(self, table_name, database_dict={
+        'type': 'sqlite',
+        'name': "filtered_cks.db"
+    }, table_type='cookie', default_times=3):
+        self.database_dict = database_dict
+        self.table_name = self.getTableName(table_name)
+        # # 默认为处理ck的表，如果需要处理logs，则table_type为'log'
+        self.table_type = table_type
+        if self.table_type == 'log':
+            self.log_set = set()
+        self.default_times = default_times
+        print(self.table_name)
+        self.createDatebase()
+        self.createTable()
+
+    def getTableName(self, name):
+        if len(name) > 300:
+            name = name[:300]
+        if len(name) < 20:
+            return name
+        temp = 'table_' + name.replace('=', '').replace('%', '').replace('_', '').replace('.', '')[::10]
+        return temp if len(temp) <= 20 else temp[:20]
+
+    def deleteTable(self):
+        self.c.execute(f'''
+                        DROP TABLE IF EXISTS {self.table_name}
+                        ''')
+        self.conn.commit()
+
+    def createDatebase(self):
+        if 'type' not in self.database_dict:
+            print("Error in database configure! Exit...")
+            exit()
+
+        self.conn = sqlite.connect("filtered_cks.db")
+        print("Connected to local sqlite successfully...")
+
+        self.c = self.conn.cursor()
+        return self.conn
+
+    def createTable(self):
+        if self.table_type == 'cookie':
+            # 时间戳；ck；日期；优先级；权重（拟运行次数）
+            self.c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name}
+                            (TIMESTAMP REAL PRIMARY KEY NOT NULL, 
+                            USER_NAME TEXT NOT NULL, 
+                            DATE TEXT NOT NULL, 
+                            PRIORITY INT NOT NULL,
+                            TIMES INT NOT NULL DEFAULT 0);
+                            ''')
+            self.conn.commit()
+        elif self.table_type == 'log':
+            self.c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name}
+                            (TIMESTAMP REAL PRIMARY KEY NOT NULL, 
+                            LOG TEXT NOT NULL,
+                            TIMES INT NOT NULL);
+                            ''')
+            self.conn.commit()
+
+        else:
+            print("ERROR in 'table_type'!")
+            return
+
+        print(f"Table {self.table_name} has been created.")
+
+    def deleteTable(self):
+        self.c.execute(f"DROP TABLE {self.table_name};")
+        self.conn.commit()
+        print(f"Table {self.table_name} has been deleted.")
+
+
+    def insertItem(self, user_name, timestamp, year_month_day, priority):
+        if self.findUserName(user_name, year_month_day):
+            print(f"{getUserName(user_name)} is in Table {self.table_name}. Updating...")
+            self.updateItem(user_name, timestamp, year_month_day, priority)
+            return
+        self.c.execute(f'''INSERT INTO {self.table_name} (USER_NAME, TIMESTAMP, DATE, PRIORITY)
+                            VALUES ('{user_name}', {timestamp}, '{year_month_day}', {priority})''')
+        self.conn.commit()
+        print(f"Item {getUserName(user_name)} has been inserted into Table {self.table_name}.")
+
+    def addTimes(self, user_name, year_month_day=str(datetime.date.today())):
+        if not self.findUserName(user_name, year_month_day):
+            print(f"Error in updating: No item found...")
+            return
+        self.c.execute(f'''
+                        UPDATE {self.table_name} set 
+                        TIMES = TIMES + 1
+                        WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND DATE = '{year_month_day}'
+                        ''')
+        self.conn.commit()
+        print(f"Item {getUserName(user_name)}'s times have been added in Table {self.table_name}.")
+
+    def updateItem(self, user_name, timestamp, year_month_day, priority):
+        if not self.findUserName(user_name, year_month_day):
+            print(f"Error in updating: No item found...")
+            return
+        # 时间戳为primary key，不更新，ck动态更新，因为会失效
+        # 优先级大于0时可以更新，但只更新权重
+        # 等于0的也更新
+        if priority > 0:
+            self.c.execute(f'''
+                            UPDATE {self.table_name} SET 
+                            USER_NAME='{user_name}',
+                            DATE='{year_month_day}'
+                            WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                            ''')
+            print(
+                f"Item {getUserName(user_name)} has been updated for USER_NAME (with cookie). The weight is not updated.")
+        else:
+            # 小于或者等于0时全部更新
+            self.c.execute(f'''
+                            UPDATE {self.table_name} SET 
+                            USER_NAME='{user_name}',
+                            DATE='{year_month_day}',
+                            PRIORITY={priority}
+                            WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                            ''')
+            print(f"Item {getUserName(user_name)}:{priority} has been updated in Table {self.table_name}.")
+        self.conn.commit()
+
+    def updateItem_ALLCK(self, user_name, timestamp, year_month_day, priority):
+        if not self.findUserName(user_name, year_month_day):
+            print(f"Error in updating: No item found...")
+            return
+
+        # 只将数值更新为权重比较高的值和权重小于或等于0的值。
+        self.c.execute(f'''
+                        SELECT PRIORITY FROM {self.table_name} 
+                        WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                        ''')
+        old_priority = int(self.c.fetchone()[0])
+        # 更新权重条件：1. 当前权重大于0（未领到券且当前账号不火爆）；2. 在1的基础上，需要更新的权重小于等于0（抢到券或火爆）或权重大于旧权重（更新为更高的权重）
+        if old_priority > 0 and (old_priority < priority or priority <= 0):
+            # if self.c.fetchone()[0] < priority or priority <= 0:
+            self.c.execute(f'''
+                            UPDATE {self.table_name} SET 
+                            USER_NAME='{user_name}',
+                            DATE='{year_month_day}',
+                            PRIORITY={priority}
+                            WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                            ''')
+            print(f"Item {getUserName(user_name)}:{priority} has been updated in Table {self.table_name}.")
+        else:
+            # 权重更小，且权重大于0，则不更新权重，只更新数值。
+            self.c.execute(f'''
+                UPDATE {self.table_name} SET 
+                USER_NAME='{user_name}',
+                DATE='{year_month_day}'
+                WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND PRIORITY > 0 AND DATE = '{year_month_day}'
+                ''')
+            print(
+                f"Item {getUserName(user_name)} has been updated for USER_NAME (with cookie). The weight is not updated.")
+
+    def filterUsers(self, user_number, year_month_day=str(datetime.date.today())):
+        self.c.execute(f'''
+                        SELECT USER_NAME, TIMES FROM {self.table_name} WHERE PRIORITY > -1 AND DATE = '{year_month_day}' ORDER BY PRIORITY DESC;
+                        ''')
+        p = self.c.fetchall()
+        users, times = [], []
+        for x in p:
+            users.append(x[0])
+            times.append(x[1])
+        # users, times = [x[0] for x in p], [x[-1] for x in p]
+        return users[:min(len(users), user_number)], times[:min(len(times), user_number)]
+
+    # 优先选择前priority_number个用户。超过priority_number时，再逐次捕获
+    # 前priority_number个号优先级相同，全部抢完后才执行后面账号，后面先按照之前版本的权重排序，每次获取user_number个ck
+    def filterUsersWithPriorityLimited(self, user_number=2, year_month_day=str(datetime.date.today()),
+                                       priority_number=4):
+        # 为-1的都是优先级较高且抢到的
+        self.c.execute(f'''
+                        SELECT COUNT(*) FROM {self.table_name} WHERE PRIORITY = -1 AND DATE = '{year_month_day}' ORDER BY PRIORITY DESC;
+                        ''')
+        had_number = self.c.fetchone()[0]
+        # 已经抢到的数量小于预设的数量，需要加载其中尚未抢到的
+        if had_number < priority_number:
+            user_number = priority_number - had_number
+        # 超过priority_number后，根据权重选择user_number个数据进行计算。
+        self.c.execute(f'''
+                        SELECT USER_NAME, TIMES FROM {self.table_name} WHERE PRIORITY > -1 AND DATE = '{year_month_day}' ORDER BY PRIORITY DESC;
+                        ''')
+        p = self.c.fetchall()
+        users, times = [], []
+        for x in p:
+            users.append(x[0])
+        times.append(x[1])
+        # users, times = [x[0] for x in p], [x[-1] for x in p]
+        return users[:min(len(users), user_number)], times[:min(len(times), user_number)]
+
+    def findUserName(self, user_name, year_month_day=str(datetime.date.today())):
+        p = self.c.execute(f'''
+                        SELECT count(*) from {self.table_name} WHERE USER_NAME LIKE '%{getUserName(user_name)}%' AND DATE = '{year_month_day}'
+                        ''')
+        return self.c.fetchone()[0] != 0
+
+    def logsNumber(self):
+        if self.table_type != 'log': return -1
+        self.c.execute(f'''
+                SELECT COUNT(*) from {self.table_name}
+                ''')
+        return self.c.fetchone()[0]
+
+    def printAllLogs(self):
+        self.printLogs(0x7fffffff)
+
+    def printLogs(self, log_num=10):
+        if self.table_type != 'log': return
+        self.c.execute(f"SELECT * FROM {self.table_name} LIMIT {log_num}")
+        for item in self.c.fetchall():
+            print(f"{item[1] if len(item[1]) < 30 else item[1][::50][::-1][:50]}\t{item[2]}")
+
+    def printTodayItems(self):
+        return self.printAllItems(str(datetime.date.today()))
+
+    def printAllItems(self, year_month_day=None):
+        res = ""
+        if year_month_day is None:
+            print(f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times")
+            res += f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times\n"
+            self.c.execute(f"SELECT * FROM {self.table_name}")
+            for item in self.c.fetchall():
+                print(f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}")
+                if int(item[3]) == -1:
+                    res += f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}\n"
+        else:
+            print(f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times")
+            res += f"{'user_name'.ljust(17, ' ')}{'date'.ljust(12, ' ')}prio  times\n"
+            self.c.execute(f"SELECT * FROM {self.table_name} WHERE DATE = '{year_month_day}'")
+            for item in self.c.fetchall():
+                print(f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}")
+                res += f"{getUserName(item[1]).ljust(17, ' ')}{item[2]}  {str(item[3]).ljust(6, ' ')}{item[4]}\n"
+        return res
+
+    def getAllUsers(self, year_month_day=str(datetime.date.today())):
+        res = []
+        for item in self.c.execute(f"SELECT USER_NAME from {self.table_name} WHERE DATE = '{year_month_day}'"):
+            res.append(item[0])
+        return res
+
+    def close(self):
+        self.conn.close()
+
+
+
 def jdTime():
     url = 'http://api.m.jd.com/client.action?functionId=queryMaterialProducts&client=wh5'
     headers = {
@@ -140,13 +390,31 @@ def exchangeWithoutSignOrLog(
 
     cookies = os.environ["JD_COOKIE"].split('&') if "JD_COOKIE" in os.environ else []
 
-    # 每线程每个账号循环次数
     if len(cookies) == 0:
         print("All accounts have the coupon today! Exiting...")
         # 当前cookies没有时，就
         return
 
-    random.shuffle(cookies)
+    database_dict = {
+        'type': 'sqlite',
+        'name': "filtered_cks.db"
+    }
+    batch_size = 3
+    # 存入数据库
+    database = SQLProcess("ck2_59_20_" + time.strftime("%Y%W"), database_dict)
+    # 插入所有数据，如果存在则更新
+    insert_start = time.time()
+    today_week_str = time.strftime("%Y-(%W) ")
+    for i, ck in enumerate(cookies):
+        database.insertItem(ck, time.time(), today_week_str, len(cookies) - i)
+    insert_end = time.time()
+    print("\nTime for updating/inserting into database：{:.2f}s\n".format(insert_end - insert_start))
+
+    print('\nDatabase before updating：')
+    database.printAllItems()
+
+    # Debug 部署时修改
+    cookies, visit_times = database.filterUsers(user_number=batch_size, year_month_day=today_week_str)
 
     print("\nAccount ready to run：")
     print("\n".join([getUserName(ck) for ck in cookies]), '\n')
@@ -205,12 +473,21 @@ def exchangeWithoutSignOrLog(
         t.join()
     printT("Sub-thread(s) done...")
 
+    # update database
     print()
+    # 将为False的ck更新为负值
+    for ck, state in mask_dict.items():
+        if state <= 0:
+            database.insertItem(ck, time.time(), today_week_str, state)
+        # else:
+        # 当前尚未抢到时，次数+1，state为0时说明不足，不自增
+        database.addTimes(ck, today_week_str)
 
+    # TODO DEBUG
     # message notification
     summary = f"Coupon ({coupon_type})"
     content = ""
-    print()
+
     # 将为False的ck更新为负值
     for ck, state in mask_dict.items():
         if state == -1:
@@ -226,13 +503,23 @@ def exchangeWithoutSignOrLog(
             print(f"User: {getUserName(ck)} 未抢到")
             content += f"User: {getUserName(ck)} 未抢到！\n"
 
-    content += f"\n----------------------\n"
+
+    print('\nDatabase after updating：')
+    # database.printAllItems()
+    # database.close()
+    #
+    # printT("Ending...")
+
+    today_information = database.printAllItems(year_month_day=today_week_str)
+    content += f"\n\n----------------------\n今日{coupon_type}优惠券账号状态如下：\n" + today_information + "----------------------\n"
 
     if len(coupon_type):
         sendNotification(summary=summary, content=content)
 
-    print()
+
+    database.close()
     printT("Ending...")
+
 
 
 def loopForDays(header,
@@ -297,7 +584,6 @@ if __name__ == "__main__":
     # Not necessary: Add wxpusher notification if you want
     os.environ["WXPUSHER_APP_TOKEN"] = ""
     os.environ["WXPUSHER_UID"] = ""
-    # TODO
     # 调试时设置为True
     os.environ['DEBUG_59_20_3'] = "False"
 
