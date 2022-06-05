@@ -366,11 +366,15 @@ def exchangeThread(cookie, request_url, mask_dict, thread_id, thread_number):
     if 'result' not in result:
         if 'retMessage' in result:
             result_string = result['retMessage']
+        elif 'couponIds' in result:
+            result_string = result['couponIds']
         else:
             result_string = "TODO Message."
     else:
         if 'biz_msg' in result['result']['floorResult']:
             result_string = result['result']['floorResult']['biz_msg']
+        elif 'couponIds' in result['result']['floorResult']:
+            result_string = result['result']['floorResult']['couponIds']
         else:
             result_string = result['result']['floorResult']
         # result_string =  result['result']['floorResult']['biz_msg'] if 'biz_msg' in result['result']['floorResult'] else result['result']['floorResult']
