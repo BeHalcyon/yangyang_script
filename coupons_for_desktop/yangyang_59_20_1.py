@@ -881,6 +881,7 @@ if __name__ == '__main__':
     # TODO
     # Necessary
     # 服务器接口
+    # 联系我获取
     os.environ["JD_SIGN_API"] = "xxxxxxxxxxxxxxxxxxxxxx"
     os.environ["JD_SIGN_API_TOKEN"] = "xxxxxxxxxxxxxxxxxxxxxxxx"
 
