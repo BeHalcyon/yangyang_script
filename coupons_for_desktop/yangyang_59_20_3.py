@@ -373,15 +373,15 @@ def exchangeThread(cookie, request_url, mask_dict, thread_id, thread_number):
     else:
         if 'biz_msg' in result['result']['floorResult']:
             result_string = result['result']['floorResult']['biz_msg']
-        elif 'couponIds' in result['result']['floorResult']:
-            result_string = result['result']['floorResult']['couponIds']
+        # elif 'couponIds' in result['result']['floorResult']:
+        #     result_string = result['result']['floorResult']['couponIds']
         else:
             result_string = result['result']['floorResult']
         # result_string =  result['result']['floorResult']['biz_msg'] if 'biz_msg' in result['result']['floorResult'] else result['result']['floorResult']
     printT(
         f"Thread: {thread_id}/{thread_number}, user：{getUserName(ck, True)}: {result_string}")
 
-    if "成功" in result_string or "已兑换" in result_string:
+    if "成功" in result_string or "已兑换" in result_string or 'couponIds' in str(result_string):
         mask_dict[ck] = -1
     elif "不足" in result_string:
         mask_dict[ck] = 0
