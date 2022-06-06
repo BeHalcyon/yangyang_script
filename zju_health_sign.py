@@ -434,7 +434,6 @@ class HealthCheckInHelper(ZJULogin):
             # location = self.get_ip_location()
             # print(location)
             # location = {'info': 'LOCATE_SUCCESS', 'status': 1, 'lng': self.lng, 'lat': self.lat}
-            # 浙江省杭州市西湖区三墩镇浙江大学紫金港校区信访接待室浙江大学(紫金港校区)
             location = {'info': 'LOCATE_SUCCESS', 'status': 1, 'lng': 120.090834, 'lat': 30.303819}
             print(location)
             
