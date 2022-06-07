@@ -165,6 +165,11 @@ def loopForDays(function,
 
             waiting_time = (next_task_start_time - datetime.datetime.now()).total_seconds()
 
+            if waiting_time < 0:
+                next_task_start_time += datetime.timedelta(days=1)
+                waiting_time = (next_task_start_time - datetime.datetime.now()).total_seconds()
+
+
             if not (debug_flag_str in os.environ and os.environ[debug_flag_str] == 'True'):
                 print("\n" + ("Waiting to " + str(next_task_start_time)).center(80, "*") + "\n")
                 printT(f"Waiting {waiting_time}s.")
