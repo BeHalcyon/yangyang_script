@@ -1,9 +1,9 @@
 # encoding: utf-8
 # -*- coding: utf-8 -*
 '''
-项目名称:exchange_check_coupons.py
-Author: yangyang
-功能：
+项目名称: fisher_check_coupons.py
+Author: fisher
+功能：残障脚本，请勿使用
 Date: 2022-5-12
 cron: 0 58 14,7 * * *
 new Env("优惠券通知");

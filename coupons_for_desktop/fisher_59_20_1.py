@@ -3,7 +3,7 @@
 '''
 项目名称:yangyang_59_20_1.py
 Author: Fisher
-功能：
+功能：残障脚本，请勿使用
 Date: 2022-5-12
 cron: 0 59 9,13,17,21,23 * * *
 '''
@@ -881,7 +881,6 @@ if __name__ == '__main__':
     # TODO
     # Necessary
     # 服务器接口
-    # 联系我获取
     os.environ["JD_SIGN_API"] = "xxxxxxxxxxxxxxxxxxxxxx"
     os.environ["JD_SIGN_API_TOKEN"] = "xxxxxxxxxxxxxxxxxxxxxxxx"
 

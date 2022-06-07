@@ -1,9 +1,9 @@
 #!/bin/env python3
 # -*- coding: utf-8 -*
 '''
-项目名称:yangyang_59_20_3.py
-Author: yangyang
-功能：
+项目名称: fisher_59_20_3.py
+Author: I know nothing
+功能：残障脚本，请勿使用
 Date: 2022-5-26
 cron: 0 59 9,13,19,23 * * *
 new Env("京东59减20(3)");

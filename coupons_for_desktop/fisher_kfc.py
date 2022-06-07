@@ -1,12 +1,12 @@
 #!/bin/env python3
 # -*- coding: utf-8 -*
 '''
-项目名称:exchange_918.py
-Author: yangyang
-功能：
-Date: 2022-5-7
+项目名称:fisher_kfc.py
+Author: fisher
+功能：残障脚本，请勿使用
+Date: 2022-6-6
 cron: 20 59 19,23 * * *
-new Env("极速版918券");
+new Env("plus_kfc");
 '''
 
 # from exchange_lib import *
