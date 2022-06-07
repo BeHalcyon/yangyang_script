@@ -1,7 +1,7 @@
 #!/bin/env python3
 # -*- coding: utf-8 -*
 '''
-项目名称:yangyang_59_20_1.py
+项目名称: fisher_59_20_1.py
 Author: Fisher
 功能：残障脚本，请勿使用
 Date: 2022-5-12
@@ -513,7 +513,7 @@ def receiveNecklaceCouponThread(cookie, api_para, mask_dict, thread_id=0, thread
         printT(prefix_info + target_info)
     except:
         pass
-    if "已经兑换过" in target_info or "太贪心" in target_info:
+    if "已经兑换过" in target_info or "太贪心" in target_info or "成功" in target:
         mask_dict[cookie] = -1
     elif "不足" in target_info:
         mask_dict[cookie] = 0
