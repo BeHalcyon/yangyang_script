@@ -69,14 +69,6 @@ def exchangePlusCoupon(header='https://api.m.jd.com/client.action?functionId=new
         # 当前cookies没有时，就
         return
 
-    # 将优先级最高的ck增加一次机会，当存在的ck对应次数都一致时不增加。
-    if len(cookies) > 1 and len(visit_times):
-        max_times = max(visit_times)
-        for i in range(len(visit_times)):
-            if visit_times[i] == max_times:
-                cookies.append(cookies[i])
-                break
-
 
     # 每个线程只负责一个ck
     request_url_list = []
