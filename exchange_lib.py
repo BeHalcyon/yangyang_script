@@ -794,10 +794,16 @@ def jdTime():
         "user-agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36'
     }
     try:
-        res = requests.get(url=url, headers=headers, timeout=1).json()
-        return int(res['currentTime2'])
+        index = 0
+        while index < 3:
+            res = requests.get(url=url, headers=headers, timeout=1).json()
+            if 'currentTime2' in res:
+                return int(res['currentTime2'])
+            index += 1
+        return int(round(time.time()*1000))
     except:
-        return 0
+        return int(round(time.time()*1000))
+
 
 
 # multiple process to multiple threading
