@@ -5,7 +5,7 @@
 Author: yangyang
 功能：
 Date: 2022-5-7
-cron: 20 59 9 * * *
+cron: 20 59 9,13,17,23 * * *
 new Env("plus抢券");
 '''
 
@@ -69,7 +69,6 @@ def exchangePlusCoupon(header='https://api.m.jd.com/client.action?functionId=new
         # 当前cookies没有时，就
         return
 
-
     # 每个线程只负责一个ck
     request_url_list = []
     # thread_number = len(body_dict_list) * thread_number
@@ -115,10 +114,7 @@ def exchangePlusCoupon(header='https://api.m.jd.com/client.action?functionId=new
     jd_timestamp = datetime.datetime.fromtimestamp(jdTime() / 1000)
     server_delta = (jd_timestamp - datetime.datetime.now()).total_seconds()
     printT(f"Server delay (JD server - current server): {server_delta}s.")
-    if 'debug_flag' in os.environ and os.environ['debug_flag'] == 'True':
-        nex_time = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
-    else:
-        nex_time = (jd_timestamp + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+    nex_time = (jd_timestamp + datetime.timedelta(minutes=1)).replace(second=0, microsecond=0)
     waiting_time = (nex_time - jd_timestamp).total_seconds()
     printT(f"Waiting {waiting_time}s...")
     time.sleep(max(waiting_time - waiting_delta, 0))
@@ -177,7 +173,6 @@ body_dict_list = [
         'args': 'roleId=77389441,key=m2aat1e1r7i9a1lccdmcsaaadce463f0'
     }
 ]
-
 
 exchangePlusCoupon(header='https://api.m.jd.com/client.action?functionId=newBabelAwardCollection&client=wh5&clientVersion=1.0.0',
         body_list=body_dict_list, batch_size=4, other_batch_size=4, waiting_delta=0.3, sleep_time=0.02, thread_number=8, coupon_type="plus_coupons")
