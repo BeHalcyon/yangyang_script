@@ -160,19 +160,26 @@ body_dict_list = [
         'scene': '1',
         'args': 'roleId=77525429,key=mdaft7e0r9i9abl6cem5s7429de45d87'
     },
-    # Dior
+    # # Dior
+    # {
+    #     'activityId': '2X2rJK2NgjmEZLPanyYD1FvbxwAN',
+    #     'scene': '1',
+    #     'args': 'roleId=77389437,key=mfa3t8e6r5ifa5l1c9m6s12390a56447'
+    # },
+    # # SK-II
+    # {
+    #     'activityId': '2X2rJK2NgjmEZLPanyYD1FvbxwAN',
+    #     'scene': '1',
+    #     'args': 'roleId=77389441,key=m2aat1e1r7i9a1lccdmcsaaadce463f0'
+    # }
+    # ipad
     {
         'activityId': '2X2rJK2NgjmEZLPanyYD1FvbxwAN',
         'scene': '1',
-        'args': 'roleId=77389437,key=mfa3t8e6r5ifa5l1c9m6s12390a56447'
-    },
-    # SK-II
-    {
-        'activityId': '2X2rJK2NgjmEZLPanyYD1FvbxwAN',
-        'scene': '1',
-        'args': 'roleId=77389441,key=m2aat1e1r7i9a1lccdmcsaaadce463f0'
+        'args': 'roleId=77525435,key=meaet7edrai5a2lac8mas333d5346bce'
     }
 ]
+
 
 exchangePlusCoupon(header='https://api.m.jd.com/client.action?functionId=newBabelAwardCollection&client=wh5&clientVersion=1.0.0',
         body_list=body_dict_list, batch_size=4, other_batch_size=4, waiting_delta=0.3, sleep_time=0.02, thread_number=8, coupon_type="plus_coupons")
