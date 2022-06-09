@@ -83,6 +83,8 @@ def findCoupons(cookie):
     }
     res = requests.get(url, headers=headers, verify=False)
     res = json.loads(res.text.replace("try{ jsonpCBKB(", "").replace("\n);}catch(e){}", ""))
+    if 'coupon' not in res or 'useable' not in res['coupon']:
+        return getUserName + "账号过期\n"
     coupon_list = res['coupon']['useable']
 
 
