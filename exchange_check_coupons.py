@@ -34,6 +34,12 @@ def findCoupons(cookie):
             "today_get": 0,
             "coupon_type": ""
         },
+        "老虎机59-25": {
+            "coupon_number": 0,
+            "today_expire": 0,
+            "today_get": 0,
+            "coupon_type": ""
+        },
         "15-8元": {
             "coupon_number": 0,
             "today_expire": 0,
