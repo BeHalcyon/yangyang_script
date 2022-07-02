@@ -1053,6 +1053,7 @@ if __name__ == '__main__':
     # 20220520 10点场：waiting_delta=0.4，sleep_time=0.025正常
     # 14点场：waiting_delta=0.4，sleep_time=0.025 过早，存在火爆，建议修改为waiting_delta=0.3, sleep_time=0.035
 
+
     cur_hour = datetime.datetime.now().strftime('%H')
     if cur_hour != "23":
         exchangeV3(batch_size=6, waiting_delta=0.35, loop_times=2, sleep_time=0.035)
