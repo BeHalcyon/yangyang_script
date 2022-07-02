@@ -1053,18 +1053,6 @@ if __name__ == '__main__':
     # 20220520 10点场：waiting_delta=0.4，sleep_time=0.025正常
     # 14点场：waiting_delta=0.4，sleep_time=0.025 过早，存在火爆，建议修改为waiting_delta=0.3, sleep_time=0.035
 
-    os.environ["DATABASE_TYPE"] = "mysql"
-    os.environ["DATABASE_HOST"] = "xiangyanghe.top"
-    os.environ["DATABASE_PORT"] = "3306"
-    os.environ["DATABASE_USER"] = "sql_coupon"
-    os.environ["DATABASE_PASSWD"] = "DthmCa8YRYprzT45"
-    os.environ["DATABASE_DATABASE"] = "sql_coupon"
-    # os.environ["JD_SIGN_API"] = "http://xiangyanghe.cn:9091/yangyang/jdSign"
-    os.environ["JD_SIGN_API"] = "http://xiangyanghe.cn:9091/yangyang/jdSignWithUuidEncrypt"
-    os.environ["JD_SIGN_API_TOKEN"] = "LKHJFPOajslfkjPFoasdfajQOIJ"
-    os.environ["WXPUSHER_APP_TOKEN"] = "AT_2us2aVEfFfvcl2zk8E3fWQwyxEgqYt6c"
-    os.environ["WXPUSHER_UID"] = "UID_tsUTi2JU8CZxW7b58OryyaIdaiOW"
-
     cur_hour = datetime.datetime.now().strftime('%H')
     if cur_hour != "23":
         exchangeV3(batch_size=6, waiting_delta=0.35, loop_times=2, sleep_time=0.035)
