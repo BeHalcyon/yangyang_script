@@ -28,7 +28,7 @@ CHAT_ID = os.getenv('CHAT_ID')
 HOST = "glados.rocks"
 ORIGIN_URL = f"https://{HOST}"
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
-BUDGET_DATA_PATH = "budget.json"
+BUDGET_DATA_PATH = "./budget.json"
 
 def sendNotification(summary, content):
     if "WXPUSHER_APP_TOKEN" in os.environ and "WXPUSHER_UID" in os.environ:
