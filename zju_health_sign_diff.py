@@ -1,15 +1,3 @@
-#!/bin/env python3
-# -*- coding: utf-8 -*
-'''
-name: sign.py
-Author: yangyang
-Origin: https://github.com/Dimlitter/zju-dailyhealth-autocheck.git
-Content: 添加青龙自动签到依赖
-Date: 2022-3-21
-cron: 0 20 8 * * *
-new Env("ZJU健康打卡");
-'''
-
 import requests
 import re
 import json
@@ -17,87 +5,8 @@ import datetime
 import time
 import os
 import random
-# import ddddocr
-
-# class getcode():
-
-#     def __init__(self,res):
-#         self.res = res
-    
-#     def get_photo(self):
-#         try:
-#             with open('./img/verify.png', 'wb') as f:
-#                 f.write(self.res)
-#             return True
-
-#         except Exception as e:
-#             print(e)
-#             return False
-
-#     def parse(self):
-#         ocr = ddddocr.DdddOcr(show_ad=False,old=True)
-#         with open('./img/verify.png', 'rb') as f:
-#             image = f.read()
-#         res = ocr.classification(image)
-#         print('验证码识别结果：',res)
-#         return res
-    
-#     def main(self):
-#         if self.get_photo():
-#             return self.parse()
-#         else:
-#             return False
-# 推送tg
-def push_tg(token, chat_id, desp=""):
-    now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    """
-    推送消息到TG
-    """
-    if token == '':
-        print("[注意] 未提供token，不进行tg推送！")
-    elif chat_id == '':
-        print("[注意] 未提供chat_id，不进行tg推送！")
-    else:
-        
-        # server_url = "https://api.telegram.org/bot{}/sendmessage".format(token)
-        server_url = "https://yangyang.halcyon.workers.dev/bot{}/sendmessage".format(token)
-        params = {
-            "text": '      {}'.format(str(now)) +  '\n=============================\n              ZJU健康打卡\n=============================\n' + desp,
-            "chat_id": chat_id
-        }
-        print(server_url)
-        response = requests.get(server_url, params=params)
-        json_data = response.json()
- 
-        if json_data['ok'] == True:
-            print("[{}] 推送成功。".format(now))
-        else:
-            print("[{}] 推送失败：{}({})".format(now, json_data['error_code'], json_data['description']))
-
-def sendNotification(summary, content):
-    if "WXPUSHER_APP_TOKEN" in os.environ and "WXPUSHER_UID" in os.environ:
-        url = "http://wxpusher.zjiecode.com/api/send/message"
-        body = {
-            "appToken": os.environ["WXPUSHER_APP_TOKEN"],
-            "content": content,
-            "summary": summary,
-            # "contentType": 1,
-            # "topicIds": [
-            #     123
-            # ],
-            "uids": [
-                os.environ["WXPUSHER_UID"]
-            ],
-        }
-        try:
-            res = requests.post(url, json=body).json()
-            if 'code' in res and res['code'] == 1000:
-                print("WxPusher: Message send successfully.")
-        except Exception as e:
-            print(f"WxPusher: Message send failed: {e}")
-    else:
-        print(f"WxPusher: Message send failed: Please configure environments (WXPUSHER_APP_TOKEN and WXPUSHER_UID).")
-
+from notify.tgpush import post_tg
+from notify.Dingpush import dingpush
 
 #签到程序模块
 class LoginError(Exception):
@@ -139,9 +48,6 @@ class ZJULogin(object):
     headers = {
         'user-agent': 'Mozilla/5.0 (Linux; U; Android 11; zh-CN; M2012K11AC Build/RKQ1.200826.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 UWS/3.22.0.36 Mobile Safari/537.36 AliApp(DingTalk/6.0.7.1) com.alibaba.android.rimet.zju/14785964 Channel/1543545060864 language/zh-CN 2ndType/exclusive UT4Aplus/0.2.25 colorScheme/light',
     }
-    # BASE_URL = "https://healthreport.zju.edu.cn/ncov/wap/default/index"
-    # LOGIN_URL = "https://zjuam.zju.edu.cn/cas/login?service=http%3A%2F%2Fservice.zju.edu.cn%2F"
-
 
     def __init__(self, username, password, delay_run=False):
         self.username = username
@@ -152,9 +58,11 @@ class ZJULogin(object):
         self.BASE_URL = "https://healthreport.zju.edu.cn/ncov/wap/default/index"
         self.LOGIN_URL = "https://zjuam.zju.edu.cn/cas/login?service=http%3A%2F%2Fservice.zju.edu.cn%2F"
         
-        
-        self.TG_TOKEN = getEnvs(os.environ['TG_BOT_TOKEN']) if 'TG_BOT_TOKEN' in os.environ else ""	#TG机器人的TOKEN
-        self.CHAT_ID = str(getEnvs(os.environ['TG_USER_ID'])) if 'TG_USER_ID' in os.environ else ""	    #推送消息的CHAT_ID
+        self.TG_TOKEN = os.getenv("TG_TOKEN")	#TG机器人的TOKEN
+        self.CHAT_ID = os.getenv("CHAT_ID")	    #推送消息的CHAT_ID
+        self.DD_BOT_TOKEN = os.getenv("DD_BOT_TOKEN")
+        self.DD_BOT_SECRET=os.getenv("DD_BOT_SECRET") #哈希算法验证(可选)
+        self.reminders = os.getenv("REMINDERS")
 
         self.lng= os.getenv("lng")
         self.lat= os.getenv("lat")
@@ -180,11 +88,7 @@ class ZJULogin(object):
         # check if login successfully
         if '用户名或密码错误' in res.content.decode():
             raise LoginError('登录失败，请核实账号密码重新登录')
-        if '异常' in res.content.decode():
-            raise LoginError('登录异常，请检查原因')
-        # print(res.content.decode())
         print("统一认证平台登录成功~")
-        # exit()
         return self.sess
 
     def _rsa_encrypt(self, password_str, e_str, M_str):
@@ -267,17 +171,17 @@ class HealthCheckInHelper(ZJULogin):
         try:
             done = re.findall('温馨提示： 不外出、不聚集、不吃野味， 戴口罩、勤洗手、咳嗽有礼，开窗通风，发热就诊',html)[0]
             print(done)
-            # try:
-            #     res = self.sess.get(self.imgaddress, headers=self.headers)
-            #     code_get = getcode(res.content)
-            #     code = code_get.main()
-            #     if not code :
-            #         self.Push('验证码识别失败，请重试')
-            #         return
-            #     else:
-            #         self.Push('验证码识别成功，请稍后')
-            # except:
-            #     print('验证码识别失败')
+            '''try:
+                res = self.sess.get(self.imgaddress, headers=self.headers)
+                code_get = verify.getcode(res.content)
+                code = code_get.main()
+                if not code :
+                    self.Push('验证码识别失败，请重试')
+                    return
+                else:
+                    self.Push('验证码识别成功，请稍后')
+            except:
+                print('验证码识别失败')'''
         except:
             print('打卡网页获取失败')
             self.Push('打卡网页获取失败')
@@ -388,7 +292,7 @@ class HealthCheckInHelper(ZJULogin):
                 'gtjzzfjsj': '',
                 'gwszdd': '',
                 'szgjcs': '',
-                'ismoved': '5', # 位置变化为1，不变为0
+                'ismoved': '5',
                 'zgfx14rfhsj':'',
                 'jrdqjcqk': '',
                 'jcwhryfs': '',	
@@ -402,7 +306,7 @@ class HealthCheckInHelper(ZJULogin):
                 'jhfjsftjhb':'0',
                 'szsqsfybl':'0',
                 'gwszgz':'',
-                'campus': '紫金港校区', # 紫金港校区 玉泉校区 西溪校区 华家池校区 之江校区 海宁校区 舟山校区 宁波校区 工程师学院 杭州国际科创中心 其他
+                'campus': '', # 紫金港校区 玉泉校区 西溪校区 华家池校区 之江校区 海宁校区 舟山校区 宁波校区 工程师学院 杭州国际科创中心 其他 /不在校即为空值
                 # 👇-----2022.5.19日修改-----👇
                 'verifyCode': ''  ,
                 # 👆-----2022.5.19日修改-----👆
@@ -413,74 +317,44 @@ class HealthCheckInHelper(ZJULogin):
                                     headers=self.headers)
             return response.json()
 
-
     def Push(self,res):
-        if self.CHAT_ID and self.TG_TOKEN and len(self.CHAT_ID) and len(self.TG_TOKEN):
-            push_tg(self.TG_TOKEN, self.CHAT_ID, '浙江大学每日健康打卡 V3.1 '+ " \n\n 签到结果: " + res) 
+        if res:
+            if self.CHAT_ID and self.TG_TOKEN :
+                post_tg('浙江大学每日健康打卡 V3.1 '+ f" \n\n 签到结果:{res}", self.CHAT_ID, self.TG_TOKEN) 
+            else:
+                print("telegram推送未配置,请自行查看签到结果")
+            if self.DD_BOT_TOKEN:
+                ding= dingpush('浙江大学每日健康打卡 V3.1 ', res,self.reminders,self.DD_BOT_TOKEN,self.DD_BOT_SECRET)
+                ding.SelectAndPush()
+            else:
+                print("钉钉推送未配置，请自行查看签到结果")
             print("推送完成！")
-        else:
-            print("telegram推送未配置，请自行查看签到结果")
         
-        # sendNotification('浙江大学每日健康打卡 V3.1 ', " \n\n 签到结果: " + res)
-
     def run(self):
         print("正在为{}健康打卡".format(self.username))
         if self.delay_run:
             # 确保定时脚本执行时间不太一致
-            time.sleep(random.randint(10, 20))
+            time.sleep(random.randint(10, 100))
         try:
             self.login()
             # 拿取eai-sess的cookies信息
             self.sess.get(self.REDIRECT_URL)
-            # 由于IP定位放到服务器上运行后会是服务器的IP定位
-            # location = self.get_ip_location()
+            # location = get_ip_location()
             # print(location)
-            # location = {'info': 'LOCATE_SUCCESS', 'status': 1, 'lng': self.lng, 'lat': self.lat}
-            location = {'info': 'LOCATE_SUCCESS', 'status': 1, 'lng': 120.090834, 'lat': 30.303819}
-            print(location)
-            
+            location = {'info': 'LOCATE_SUCCESS', 'status': 1, 'lng': self.lng, 'lat': self.lat}
             geo_info = self.get_geo_info(location)
-            print(geo_info)
-            
+            # print(geo_info)
             res = self.take_in(geo_info)
-
             print(res)
-            
-            self.Push(json.dumps(res))
-            content = '\n=============================\n              ZJU健康打卡\n=============================\n' + '浙江大学每日健康打卡 V2.0 '+ " \n\n 签到结果: " + json.dumps(res) + '      {}\n'.format(str(datetime.datetime.now()))
-            sendNotification(summary="ZJU打卡", content=content)
-
+            self.Push(res)
         except requests.exceptions.ConnectionError :
             # reraise as KubeException, but log stacktrace.
             print("打卡失败,请检查github服务器网络状态")
             self.Push('打卡失败,请检查github服务器网络状态')
-
-
-def getEnvs(label):
-    try:
-        if label == 'True' or label == 'yes' or label == 'true' or label == 'Yes':
-            return True
-        elif label == 'False' or label == 'no' or label == 'false' or label == 'No':
-            return False
-    except:
-        pass
-    try:
-        if '.' in label:
-            return float(label)
-        elif '&' in label:
-            return label.split('&')
-        elif '@' in label:
-            return label.split('@')
-        else:
-            return int(label)
-    except:
-        return label
-
-
-if 'ZJU_ACCOUNT' in os.environ and 'ZJU_PASSWORD' in os.environ:
-    account = str(getEnvs(os.environ['ZJU_ACCOUNT']))
-    pwd = getEnvs(os.environ['ZJU_PASSWORD'])
-    s = HealthCheckInHelper(account, pwd, delay_run=True)
-    s.run()
-else:
-    print("环境变量未配置！")
+                
+if __name__ == '__main__':
+    # 因为是github action版本，所以不加上循环多人打卡功能   
+    account = os.getenv("account")
+    password = os.getenv("password")
+    s = HealthCheckInHelper(account, password, delay_run=True)
+    s.run() 
